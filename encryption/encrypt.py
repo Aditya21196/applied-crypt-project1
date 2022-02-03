@@ -1,8 +1,8 @@
 '''
 A module to encrypt messages
 '''
-import numpy as np
 import random
+import numpy as np
 
 # GLOBALS
 ALPHABET = " abcdefghijklmnopqrstuvwxyz"
