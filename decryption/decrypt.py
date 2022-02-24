@@ -180,15 +180,18 @@ def stress_test_fingerprint(texts):
     """
     # keep making harder and harder
     broken = False
-    for i in range(0, 50, 1):
+    for i in range(0, 100, 1):
         if broken:
             break
         prob = i / 100
-        #tests per text at the same p value
+
         print(f"Probability {prob}")
 
+        # iterate through all the texts for each p value
         for i, text in enumerate(texts):
-            for _ in range(3):
+
+            # number of test rounds for each text
+            for _ in range(10):
                 encrypted_text = encrypt.encrypt(text, encrypt.BLANK_KEY, probability=prob)
                 text_number_returned = fingerprint_best_match(encrypted_text, texts)
                 try:
@@ -196,9 +199,9 @@ def stress_test_fingerprint(texts):
                 except AssertionError:
                     print(f"Text number returned is wrong {text_number_returned} should be {i}")
                     print(f"Current probability {prob}")
-                    broken = True
+                    return prob
 
-        print("\n\n")
+        print("\n")
 
 
 def fingerprint_best_match(text, texts):
@@ -215,6 +218,9 @@ def fingerprint_best_match(text, texts):
     last_char = text[-1:]
     fingerprint_space = process_fingerprint(text, space)
     fingerprint_last_char = process_fingerprint(text, last_char)
+
+    #print(f"fingerprint_space \n {fingerprint_space}")
+    #print(f"fingerprint_last_char \n{fingerprint_last_char}")
 
     # figure out the matching function
     diff = []
@@ -283,7 +289,8 @@ def main():
     #stress_test_char_mapping(plaintexts_dict_1)
     #print(plaintexts_dict_1[0])
 
-    stress_test_fingerprint(plaintexts_dict_1)
+    failure_prob = stress_test_fingerprint(plaintexts_dict_1)
+    print(f"failure prob {failure_prob}")
     #match = fingerprint_best_match(plaintexts_dict_1[0], plaintexts_dict_1)
     #print(f"Match {match}")
     #fingerprint_space = process_fingerprint( plaintexts_dict_1, " ")
