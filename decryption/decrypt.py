@@ -6,8 +6,7 @@ output - plain text guess
 '''
 
 from pydoc import plain
-import encrypt
-import random
+
 
 # our modules
 # please avoid importing everything (import *),
@@ -97,7 +96,7 @@ def decrypt(ciphertext, key):
     return plaintext
 
 
-# util function for testing a key mapping. 
+# util function for testing a key mapping.
 # Doesn't work for value of p>0.90. As confirmed in class, this would not happen
 def test_candidate_mapping(char_key_mapping,cipher_txt,plain_txt,num_random):
     if len(cipher_txt) != len(plain_txt) + num_random:
@@ -171,20 +170,71 @@ def process_fingerprint(texts, char):
     return fingerprints
 
 
-def stress_test_fingerprint(text, dict):
-    #fingerprints = process_fingerprint(dict)
-    for i in range(0, 50, 5):
+def stress_test_fingerprint(texts):
+    """
+    Each round a text is selected randomly selected from the texts and encrypted
+        using higher and higher p values until it breaks
+    Input: a list of texts
+    Output: the encryption probability value that resulted in failure
+
+    """
+    # keep making harder and harder
+    broken = False
+    for i in range(0, 50, 1):
+        if broken:
+            break
         prob = i / 100
         #tests per text at the same p value
         print(f"Probability {prob}")
-        for _ in range(1):
-            encrypted_text = encrypt.encrypt(text, encrypt.BLANK_KEY, probability=prob)
-            last_char = encrypted_text[-1:]
-            fingerprint = process_fingerprint(encrypted_text, last_char)
-            fingerprint_space = process_fingerprint(encrypted_text, " ")
-            #print(f"fingerpring - last-char {fingerprint}")
-            print(f"fingerprint - space {fingerprint_space}")
-        print()
+
+        for i, text in enumerate(texts):
+            for _ in range(3):
+                encrypted_text = encrypt.encrypt(text, encrypt.BLANK_KEY, probability=prob)
+                text_number_returned = fingerprint_best_match(encrypted_text, texts)
+                try:
+                    assert text_number_returned == i
+                except AssertionError:
+                    print(f"Text number returned is wrong {text_number_returned} should be {i}")
+                    print(f"Current probability {prob}")
+                    broken = True
+
+        print("\n\n")
+
+
+def fingerprint_best_match(text, texts):
+    """
+    returns the best match of a text in the text_dict
+    """
+    texts_fingerprints_space = process_fingerprint(texts, " ")
+    texts_fingerprints_last = []
+    for a_text in texts:
+        last_char = a_text[-1:]
+        texts_fingerprints_last.append(process_fingerprint(a_text, last_char))
+
+    space = get_space_key_value(text)
+    last_char = text[-1:]
+    fingerprint_space = process_fingerprint(text, space)
+    fingerprint_last_char = process_fingerprint(text, last_char)
+
+    # figure out the matching function
+    diff = []
+    for i, _ in enumerate(texts):
+        fp_space_front_diff = abs((texts_fingerprints_space[i][0] - fingerprint_space[0]))
+        fp_space_back_diff = abs((texts_fingerprints_space[i][-1] - fingerprint_space[-1]))
+        fp_last_front_diff = abs((texts_fingerprints_last[i][0] - fingerprint_last_char[0]))
+        fp_last_back_diff = abs((texts_fingerprints_last[i][-2] - fingerprint_last_char[-2]))
+        score = fp_space_front_diff + fp_space_back_diff + fp_last_front_diff + fp_last_back_diff
+        diff.append(score)
+
+    # return least score if within a threshold
+    least = diff[0]
+    least_idx = 0
+    for i, entry in enumerate(diff):
+        if entry < least:
+            least_idx = i
+            least = entry
+    return least_idx
+
 
 
 def index_positions_of_char(text, target_char):
@@ -202,6 +252,11 @@ def index_positions_of_last_char(text):
     """
     target_char = text[-1:]
     return index_positions_of_char(text, target_char)
+
+
+
+
+
 
 def main():
     """
@@ -224,16 +279,24 @@ def main():
     plaintexts = plaintexts_dict_1 + [" ".join(plaintexts_dict_2)]
 
 
-    stress_test_identify_space_char(plaintexts_dict_1)
+    #stress_test_identify_space_char(plaintexts_dict_1)
     #stress_test_char_mapping(plaintexts_dict_1)
+    #print(plaintexts_dict_1[0])
 
-    #stress_test_fingerprint(plaintexts_dict_1[0], plaintexts_dict_1)
-    #fingerprints = process_fingerprint(plaintexts_dict_1, " ")
+    stress_test_fingerprint(plaintexts_dict_1)
+    #match = fingerprint_best_match(plaintexts_dict_1[0], plaintexts_dict_1)
+    #print(f"Match {match}")
+    #fingerprint_space = process_fingerprint( plaintexts_dict_1, " ")
 
-    #for i, fingerprint in enumerate(fingerprints):
-    #    print(f"text {i}")
-    #    print(fingerprint)
-    #    print()
+    """
+    for i, _ in enumerate(fingerprint_space):
+        print(f"text {i}")
+        last_char = plaintexts_dict_1[i][-1:]
+        fingerprint_last = process_fingerprint( plaintexts_dict_1[i], last_char)
+        print(f"fingerprint last {fingerprint_last}\n")
+        print(f"fingerprint space {fingerprint_space[i]}")
+        print()
+    """
 
     """
     for i, text in enumerate(plaintexts):
