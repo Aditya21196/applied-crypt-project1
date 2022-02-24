@@ -126,19 +126,19 @@ def stress_test_identify_space_char(texts):
     """
     broken = False
     # keep increaseing probability for randomness
-    for i in range(45, 100, 1):
+    for i in range(55, 100, 1):
         if broken:
             break
         prob = i / 100
          #iterate through all texts
         for text_num, _ in enumerate(texts):
             #tests per text at the same p value
-            for _ in range(3):
+            for _ in range(5):
                 encrypted_text = encrypt.encrypt(texts[text_num], encrypt.BLANK_KEY, probability=prob)
                 #print(f"encrypted_text: \n{encrypted_text}")
                 space = get_space_key_value(encrypted_text)
                 try:
-                    assert space == " "
+                    assert space == " " #in [" ", "e", "s"]
                 except AssertionError:
                     print(f"Space assert broken, space returned as {space}")
                     print(f"Current probability {prob} Text_num {text_num}")
@@ -151,29 +151,57 @@ def stress_test_char_mapping(texts):
     Input: a list of 500 character texts
     Output: Prints out at what probability the assert statements fail
     """
-    print("in stress_test_char_mapping")
-    broken = False
-    # keep increaseing probability for randomness
-    for i in range(0, 100, 1):
-        if broken:
-            break
-        prob = i / 100
-         #iterate through all texts
-        for text_num, _ in enumerate(texts):
-            #tests per text at the same p value
-            for _ in range(3):
-                encrypted_text = encrypt.encrypt(texts[text_num], encrypt.BLANK_KEY, probability=prob)
-                #print(f"encrypted_text: \n{encrypted_text}")
-                stats = frequency.get_word_frequency_statistics(encrypted_text, delimiter=" ")
-                char_mapping = get_char_mapping(stats)
-                try:
-                    assert char_mapping['s'] == 's'
-                    assert char_mapping['e'] == 'e'
-                except AssertionError:
-                    print(f"Assert broken, e: {char_mapping['e']} s: {char_mapping['s']}")
-                    print(f"Current probability {prob} Text_num {text_num}")
-                    broken = True
+    pass
 
+def process_fingerprint(texts, char):
+    """
+    input: an array of texts
+    output: an array of text fingerprints
+    """
+    fingerprints = []
+    if isinstance(texts, str):
+        idxs = index_positions_of_char(texts, char)
+        fingerprint = [i / (len(texts)-1) for i in idxs]
+        return fingerprint
+
+    for text in texts:
+        idxs = index_positions_of_char(text, char)
+        fingerprint = [i / (len(text)-1) for i in idxs]
+        fingerprints.append(fingerprint)
+    return fingerprints
+
+
+def stress_test_fingerprint(text, dict):
+    #fingerprints = process_fingerprint(dict)
+    for i in range(0, 50, 5):
+        prob = i / 100
+        #tests per text at the same p value
+        print(f"Probability {prob}")
+        for _ in range(1):
+            encrypted_text = encrypt.encrypt(text, encrypt.BLANK_KEY, probability=prob)
+            last_char = encrypted_text[-1:]
+            fingerprint = process_fingerprint(encrypted_text, last_char)
+            fingerprint_space = process_fingerprint(encrypted_text, " ")
+            #print(f"fingerpring - last-char {fingerprint}")
+            print(f"fingerprint - space {fingerprint_space}")
+        print()
+
+
+def index_positions_of_char(text, target_char):
+    """
+    Input: a text and a target char
+    Ouptu: returns all the index positions of the target_char in the text
+    """
+    return [i for i, x in enumerate(text) if x == target_char]
+
+
+def index_positions_of_last_char(text):
+    """
+    Input: a text
+    Ouptu: returns all the index positions of the last char in the text
+    """
+    target_char = text[-1:]
+    return index_positions_of_char(text, target_char)
 
 def main():
     """
@@ -196,8 +224,16 @@ def main():
     plaintexts = plaintexts_dict_1 + [" ".join(plaintexts_dict_2)]
 
 
-    #stress_test_identify_space_char(plaintexts_dict_1)
-    stress_test_char_mapping(plaintexts_dict_1)
+    stress_test_identify_space_char(plaintexts_dict_1)
+    #stress_test_char_mapping(plaintexts_dict_1)
+
+    #stress_test_fingerprint(plaintexts_dict_1[0], plaintexts_dict_1)
+    #fingerprints = process_fingerprint(plaintexts_dict_1, " ")
+
+    #for i, fingerprint in enumerate(fingerprints):
+    #    print(f"text {i}")
+    #    print(fingerprint)
+    #    print()
 
     """
     for i, text in enumerate(plaintexts):
