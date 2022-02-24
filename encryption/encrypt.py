@@ -8,10 +8,11 @@ import numpy as np
 ALPHABET = " abcdefghijklmnopqrstuvwxyz"
 ALPHABET_SIZE = len(ALPHABET)
 LETTER_POS_DICT = {char: i for i, char in enumerate(ALPHABET)}
-PROBABILITY_REPLACEMENT = .1
+PROBABILITY_REPLACEMENT = 0
 
 TEST_M = "tumble cooked twirled absinths ceca cheatery raters redeploy niacinamide offeree preventively tangibleness beamy oligarchical microbus intends galvanize indelible tubings overcools rollover maladroit logways frilling skinks affirmatively flatfoots oversleeps consignors completes espadrille booms repaved ofays keens dinosaurs rerouted consignments victimless psychophysical chuckle admissibility muleteer deescalating ovary bowwow assisi fore tubbiest vocatively filially preestablish lacquerers spr"
 
+TEST_BLANKS = "w" * 500
 
 def generate_key_mapping(seed = 0):
     """
@@ -24,6 +25,14 @@ def generate_key_mapping(seed = 0):
     np.random.shuffle(k_mapping)
     return k_mapping
 
+def char_key_mapping_from_key_mapping(key_mapping):
+    char_key_mapping = dict()
+
+    for i,k_val in enumerate(key_mapping):
+        char_key_mapping[ALPHABET[i]] = ALPHABET[k_val]
+
+    return char_key_mapping
+
 
 def encrypt(user_message, user_key, probability = PROBABILITY_REPLACEMENT):
     """
@@ -35,8 +44,8 @@ def encrypt(user_message, user_key, probability = PROBABILITY_REPLACEMENT):
     num_rand_chars = 0
 
     while message_ptr < len(user_message):
-        coin_value = random.random()
-        if probability < coin_value and coin_value <= 1:
+        coin_value = random.random() # always less than 1
+        if probability < coin_value:
             char = user_message[message_ptr]
             encrypted_char = ALPHABET[ user_key [ LETTER_POS_DICT[char]]]
             c_text.append(encrypted_char)
@@ -50,8 +59,12 @@ def encrypt(user_message, user_key, probability = PROBABILITY_REPLACEMENT):
 
 
 def main():
+    """
+    Main - runs if executed from cli
+    """
     # get message
     message = TEST_M
+    #message = TEST_BLANKS
 
     # generate keys
     key = generate_key_mapping()
@@ -61,8 +74,9 @@ def main():
 
     # return message
     print("Ciphertext:\n")
-    print(ciphertext)
+    print(f"'{ciphertext}'")
     print("\nDone Encrypting")
+    print(f"Key: {key}")
 
     # print stats
     print("\nStats:")

@@ -1,2 +1,6 @@
 env
 __pycache*
+*.txt
+!dictionaries/official_dictionary_1_cleaned.txt
+!dictionaries/official_dictionary_2_cleaned.txt
+ipython/dataset.csv

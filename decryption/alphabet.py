@@ -15,7 +15,7 @@ def get_alphabet():
     return _ALPHABET
 
 
-def get_alphabet_size():
+def get_size():
     """
     get the size of the alphabet
     returns an int
@@ -55,11 +55,14 @@ def main():
     """
     # Prints out some info if called from the command line
     print(f"The alphabet is: \'{get_alphabet()}\'")
-    print(f"It contains {get_alphabet_size()} characters.")
+    print(f"It contains {get_size()} characters.")
 
     # test for errors
     assert get_int_from_char("a") == 1
     assert get_char_from_int(22) == "v"
+    assert get_size() == 27
+    assert get_alphabet() == " abcdefghijklmnopqrstuvwxyz"
+
 
 if __name__ == "__main__":
     main()
