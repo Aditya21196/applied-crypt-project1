@@ -95,12 +95,60 @@ def match_letters_by_freq(plain, cipher, t):
     return "".join(decrpt)
 
 
+#for i, plain in enumerate(PLAIN_TEXTS):
+#    print("Plaintext: #" + str(i))
+#    t = 3
+#    decrpt = match_letters_by_freq(plain, ciphers[0], t)
+#    acc = accuracy.calc_accuracy(plain, decrpt)
+#    
+#    print("Decrypted text:")
+#    print(decrpt)
+#    print("\n\nAccuracy: " + str(acc))
+
+
 for i, plain in enumerate(PLAIN_TEXTS):
-    print("Plaintext: #" + str(i))
-    t = 3
-    decrpt = match_letters_by_freq(plain, ciphers[0], t)
-    acc = accuracy.calc_accuracy(plain, decrpt)
-    
-    print("Decrypted text:")
-    print(decrpt)
-    print("\n\nAccuracy: " + str(acc))
+        print("Plaintext: #" + str(i))
+        print(plain)
+        #print(Counter(plain))
+        words = plain.split(" ")
+        #print(words)
+        l0 = [len(w) for w in words]
+        print(l0)
+        
+        print("Ciphertext: #" + str(i))
+        print(ciphers[i])
+        c = Counter(ciphers[i])
+        print(c)
+        
+        freq = [(x, c[x]) for x in c]
+        freq.sort(key=lambda x: x[1], reverse=True)
+        print(freq[:2])
+        a, b = freq[0][0], freq[1][0]
+        
+        r1 = ciphers[i].replace(a, " ")
+        r2 = ciphers[i].replace(b, " ")
+        
+        w1 = r1.split(" ")
+        w2 = r2.split(" ")
+        
+        l1 = [len(w) for w in w1]
+        l2 = [len(w) for w in w2]
+        
+        print(l1)
+        print(l2)
+        
+        d1, d2 = [], []
+        for i in range(len(l0)):
+            if i >= len(l1):
+                continue
+            diff = abs(l0[i] - l1[i]) / l0[i]
+            d1.append(diff)
+            
+        for i in range(len(l0)):
+            if i >= len(l2):
+                continue
+            diff = abs(l0[i] - l2[i]) / l0[i]
+            d2.append(diff)
+            
+        print(sum(d1))
+        print(sum(d2))
