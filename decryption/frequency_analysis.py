@@ -12,7 +12,7 @@ with open("../dictionaries/plaintext_dictionary_1.txt", "r") as f:
 ALPHABET = alphabet.get_alphabet()
 KEY = encrypt.generate_key_mapping()
 #TEST_PROB = 0.05
-TEST_PROB = 0.05
+TEST_PROB = 0.4
 
 ciphers = [encrypt.encrypt(t, KEY, TEST_PROB) for t in PLAIN_TEXTS]
 cipher_h = {c: 0 for c in ALPHABET}
@@ -187,17 +187,34 @@ for i, cipher in enumerate(ciphers):
         #print("In Plaintext #" + str(j) + ": ")
         p_words = p.split(" ")
         p_lengths = [len(w) for w in p_words]
+        c_lengths = lengths[::]
         diff = []
-        for a in range(len(p_lengths)):
-            if a >= len(lengths) or lengths[a] == 0:
+        a = b = 0
+        while a < len(p_lengths) and b < len(c_lengths):
+            if a >= len(lengths):
                 continue
-            d = abs(p_lengths[a] - lengths[a]) / lengths[a]
-            diff.append(d)
+            if c_lengths[b] < p_lengths[a] and b < len(c_lengths) - 1:
+                c_lengths[b + 1] += c_lengths[b]
+                b += 1
+                continue
             
-        diffs.append((j, sum(diff)))
+            d = abs(c_lengths[b] - p_lengths[a]) / p_lengths[a]
+            diff.append(d)
+            a += 1
+            b += 1
+            
+        diffs.append((j, sum(diff) / len(diff)))
         #print(p_lengths)
         #print(sum(diff))
         
     diffs.sort(key=lambda x: x[1])
     res = diffs[0][0]
     print("Matched plaintext: #" + str(res))
+    
+    if res == i:
+        print("Match is correct.")
+    else:
+        print("Match is incorrect.")
+        
+    print(diffs)
+    print("\n\n")
