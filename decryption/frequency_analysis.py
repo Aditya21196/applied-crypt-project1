@@ -2,14 +2,16 @@ import sys
 sys.path.insert(0, "../encryption")
 sys.path.insert(0, "../dictionaries")
 
-import encrypt, alphabet, random, accuracy
+import encrypt, alphabet, random, accuracy, frequency
 from collections import Counter
+#from decrypt import get_space_key_value
 
 with open("../dictionaries/plaintext_dictionary_1.txt", "r") as f:
     PLAIN_TEXTS = [line.rstrip() for line in f]
 
 ALPHABET = alphabet.get_alphabet()
 KEY = encrypt.generate_key_mapping()
+#TEST_PROB = 0.05
 TEST_PROB = 0.05
 
 ciphers = [encrypt.encrypt(t, KEY, TEST_PROB) for t in PLAIN_TEXTS]
@@ -105,7 +107,7 @@ def match_letters_by_freq(plain, cipher, t):
 #    print(decrpt)
 #    print("\n\nAccuracy: " + str(acc))
 
-
+"""
 for i, plain in enumerate(PLAIN_TEXTS):
         print("Plaintext: #" + str(i))
         print(plain)
@@ -152,3 +154,50 @@ for i, plain in enumerate(PLAIN_TEXTS):
             
         print(sum(d1))
         print(sum(d2))
+"""
+
+
+def get_space_key_value(ciphertext):
+    """
+    returns the space key value for the ciphertext
+    works for values of p up to atleast .95
+    theoretically should work to ~p(.96)
+    """
+    word_stats = []
+
+    for char in (alphabet.get_alphabet()):
+        try:
+            word_stats.append(frequency.get_word_frequency_statistics(ciphertext, delimiter = char))
+        except KeyError:
+            pass
+
+    word_stats.sort(key = lambda x: x['stdev'])
+    return word_stats[0]['delimiter']
+
+
+for i, cipher in enumerate(ciphers):
+    space_val = get_space_key_value(cipher)
+    words = cipher.split(space_val)
+    lengths = [len(w) for w in words]
+    print("In ciphertext: ")
+    print(lengths)
+    diffs = []
+    
+    for j, p in enumerate(PLAIN_TEXTS):
+        #print("In Plaintext #" + str(j) + ": ")
+        p_words = p.split(" ")
+        p_lengths = [len(w) for w in p_words]
+        diff = []
+        for a in range(len(p_lengths)):
+            if a >= len(lengths) or lengths[a] == 0:
+                continue
+            d = abs(p_lengths[a] - lengths[a]) / lengths[a]
+            diff.append(d)
+            
+        diffs.append((j, sum(diff)))
+        #print(p_lengths)
+        #print(sum(diff))
+        
+    diffs.sort(key=lambda x: x[1])
+    res = diffs[0][0]
+    print("Matched plaintext: #" + str(res))
