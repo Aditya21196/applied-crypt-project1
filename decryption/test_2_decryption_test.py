@@ -18,7 +18,6 @@ def load_dictionary():
     return preprocess.read_all_lines("../dictionaries/official_dictionary_2_cleaned.txt")
 
 
-
 def make_a_dict_2_plaintext(words, seed = None):
     """
     takes a list of dictionary words
@@ -40,7 +39,7 @@ def make_a_dict_2_plaintext(words, seed = None):
 def find_word(words, cipherword):
     """
     takes a possible cipherword
-    returns a list of possible values or -1 if none found
+    returns a list of possible values or [] if none found
     """
     candidates = []
     for word in words:
@@ -142,84 +141,93 @@ def get_candidate_components(plaintext_options):
 
 
 
-def process_candidate_components(dictionary, component_list):
-
+def process_candidate_components(dictionary, component_list, ciphertext_words):
+    #note modify to return only one text of 500 chars
     num_candidate_options = [len(entry) for entry in component_list]
     num_of_potential_candidates = math.prod(num_candidate_options)
     if DEBUG:
         print(f"num_candidate_options {num_candidate_options}")
         print(f"num_of_potential_candidates {num_of_potential_candidates}")
-    candidates = []
 
+    current_key = [0 for i in enumerate(num_candidate_options)]
     for i in range(num_of_potential_candidates):
         current_candidate = ""
-        current_key = get_permutation_mapping(0, num_candidate_options)
-        print(f"current_key {current_key}")
+
+        if DEBUG:
+            print(f"line 157 - current_key {current_key}")
+
         for i, (key, entry) in enumerate(zip(current_key, component_list)):
             if i > 0:
                 current_candidate += " "
             current_candidate += entry[key]
         if len(current_candidate) > 500:
+            current_key = get_next_key(current_key, num_candidate_options)
             continue
         elif len(current_candidate) == 500:
-            candidates.append(current_candidate)
+            return current_candidate
         else:   # text < 500
             chars_to_add = 500 - len(current_candidate)
-            current_candidate += pad_ending(chars_to_add, dictionary, component_list)
-            if current_candidate == 500:
-                candidates.append(current_candidate)
-
-    return candidates
-
-
-
-def pad_ending(num_chars, dictionary, component_list):
-    padded = " "
-
-    truncated_dict = [el[:num_chars] for el in dictionary if el[num_chars - 1] == ciphertext[-1]]
-            j = len(cipher_words) - 1
-            last_word = get_possible_word_list(truncated_dict, cipher_words[j])
-            while len(last_word[0]) == 0:
-                j -= 1
-                last_word = get_possible_word_list(truncated_dict, cipher_words[j])
-
-            if DEBUG:
-                print(f"last_words {last_word}")
-                print(f"truncated dict: {truncated_dict}")
-                print(f"j word: {cipher_words[j:]}")
-
-            return_string += last_word[0][random.randint(0,len(last_word[0])-1)]
+            padding = pad_ending(chars_to_add, dictionary, ciphertext_words)
+            current_candidate += padding
+            if len(current_candidate) == 500:
+                return current_candidate
+            else:
+                current_key = get_next_key(current_key, num_candidate_options)
 
 
-
-
-
-
-
-def get_permutation_mapping(perm_num, key_array):
+def get_next_key(current_key, key_options):
     """
-    input:  perm_num, what permutation to return
-            key_array, the key space
-            num_of_permutations, the total number of permutations possible
+    input:  Takes in the current key
+            a list of key options
+    returns: the next permutation
     """
-    current_key = [0 * len(key_array)]
     if DEBUG:
-        print(f"perm number {perm_num}")
-        print(f"key_array: {key_array}")
+        print(f"ln 185 - current_key {current_key}")
+        print(f"ln 186 - key_options: {key_options}")
 
     # do some processing
     return current_key
 
 
 
+def pad_ending(num_chars, dictionary, cipher_words):
+    last_char = cipher_words[-1][-1]
+    padded = " " #keep as an empty space
+    dict_word_len = num_chars - 1
+
+    truncated_dict = [word[:dict_word_len] for word in dictionary if len(word) >= dict_word_len and word[dict_word_len-1] == last_char]
+    if DEBUG:
+        print(f"truncated_dict {truncated_dict}")
+        print(f"last_char {last_char}")
+        print(f"num_chars {num_chars}")
+
+    j = len(cipher_words) - 1
+    last_word = get_possible_word_list(truncated_dict, cipher_words[j])
+
+    if len(last_word) == 0:
+        return padded
+
+    while len(last_word[0]) == 0:
+        j -= 1
+        last_word = get_possible_word_list(truncated_dict, cipher_words[j])
+
+    if DEBUG:
+        print(f"last_words {last_word}")
+        print(f"truncated dict: {truncated_dict}")
+        print(f"j word: {cipher_words[j:]}")
+
+    padded += last_word[0][random.randint(0,len(last_word[0])-1)]
+
+    return padded
+
+
 
 def find_plaintext(words, ciphertext):
     """
-    The main dict 2 searching algorithm to find the best 500 character plaintext
     Input:  words, the dictionary of words
             ciphertext, must have the correct key applied to it and only contain extra nulls
 
-    Output: a 500 char string of only words from <words>
+    Output: a 500 char plaintext of words from dict
     """
     space = decrypt.get_space_key_value(ciphertext)
 
@@ -227,69 +235,7 @@ def find_plaintext(words, ciphertext):
     cipher_words = duplicate_spaces_removed.split(space)
     plaintext_pieces = get_possible_word_list(words, cipher_words)
     candidate_text_components = get_candidate_components(plaintext_pieces)
-    candidate_texts = process_candidate_components(words, candidate_text_components)
-
-    return candidate_texts
-
-    if DEBUG:
-        print(f"DEBUG - space: '{space}'")
-        print(f"Length of cipherwords {len(cipher_words)}")
-        print(f"cipher_words{cipher_words}")
-
-
-    plaintext_word_option_counts = [len(el) for el in plaintext]
-
-    if DEBUG:
-        print(f"plaintext {plaintext}")
-        print(f"plaintext word option counts {plaintext_word_option_counts}")
-
-    return_string = ""
-
-
-    if max(plaintext_word_option_counts) == 1:
-        if DEBUG:
-            print("here - all one")
-
-        return_string = combine_words(plaintext[0:20])
-
-    else:  #multiple possibilities
-        if DEBUG:
-            print("here - some multiples")
-        # find the best fit up to 500 chars
-        single_option_char_count = 0
-
-        for i, (option_cnt, words) in enumerate(zip(plaintext_word_option_counts, plaintext)):
-            if DEBUG:
-                print(f"i: {i} opt_cnt {option_cnt}, words {words}")
-            if option_cnt == 1:
-                pass
-
-        if DEBUG:
-            print(f"single_option_char_count {single_option_char_count}")
-
-
-    # make sure text is 500 chars long
-    """
-    return_string_length = len(return_string)
-    if return_string_length < 500:
-            return_string += " "
-            chars_to_fill = 500 - return_string_length - 1 # the plus one is the added space
-
-            truncated_dict = [el[:chars_to_fill] for el in words if el[chars_to_fill - 1] == ciphertext[-1]]
-            j = len(cipher_words) - 1
-            last_word = get_possible_word_list(truncated_dict, cipher_words[j])
-            while len(last_word[0]) == 0:
-                j -= 1
-                last_word = get_possible_word_list(truncated_dict, cipher_words[j])
-
-            if DEBUG:
-                print(f"last_words {last_word}")
-                print(f"truncated dict: {truncated_dict}")
-                print(f"j word: {cipher_words[j:]}")
-
-            return_string += last_word[0][random.randint(0,len(last_word[0])-1)]
-    """
-    return candidate_texts
+    return process_candidate_components(words, candidate_text_components, cipher_words)
 
 
 
@@ -307,7 +253,7 @@ def main():
     print(f"dict plaintext with seed({seed}):\n{plaintext}\n")
 
     # Encrypt Test Data
-    ciphertext = encrypt.encrypt(plaintext, encrypt.BLANK_KEY, .2, seed)
+    ciphertext = encrypt.encrypt(plaintext, encrypt.BLANK_KEY, .7, seed)
     #print(f"ciphertext with seed({seed}) of length {len(ciphertext)}:\n{ciphertext}\n")
 
     # Try to Generate Plaintext
