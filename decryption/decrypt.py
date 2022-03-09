@@ -123,25 +123,29 @@ def stress_test_identify_space_char(texts):
     Input: a list of 500 character texts
     Output: Prints out at what probability the assert statements fail
     """
-    broken = False
     # keep increaseing probability for randomness
-    for i in range(55, 100, 1):
-        if broken:
-            break
+    ans = []
+    for i in range(88, 96, 1):
         prob = i / 100
-         #iterate through all texts
+        #iterate through all texts
         for text_num, _ in enumerate(texts):
-            #tests per text at the same p value
-            for _ in range(5):
+            for _ in range(10):  #tests per text
                 encrypted_text = encrypt.encrypt(texts[text_num], encrypt.BLANK_KEY, probability=prob)
                 #print(f"encrypted_text: \n{encrypted_text}")
                 space = get_space_key_value(encrypted_text)
                 try:
-                    assert space == " " #in [" ", "e", "s"]
+                    ans.append((prob, text_num, space))
+                    assert space in alphabet.get_alphabet()
                 except AssertionError:
                     print(f"Space assert broken, space returned as {space}")
                     print(f"Current probability {prob} Text_num {text_num}")
-                    broken = True
+                    print(f"ans:")
+                    for entry in ans:
+                        print(entry)
+                    return prob
+    for entry in ans:
+        print(entry)
+    return -1 # error return value
 
 
 def stress_test_char_mapping(texts):
@@ -285,12 +289,13 @@ def main():
     plaintexts = plaintexts_dict_1 + [" ".join(plaintexts_dict_2)]
 
 
-    #stress_test_identify_space_char(plaintexts_dict_1)
+    broke_at = stress_test_identify_space_char(plaintexts_dict_1)
+    print(f"Space broke at {broke_at}")
     #stress_test_char_mapping(plaintexts_dict_1)
     #print(plaintexts_dict_1[0])
 
-    failure_prob = stress_test_fingerprint(plaintexts_dict_1)
-    print(f"failure prob {failure_prob}")
+    #failure_prob = stress_test_fingerprint(plaintexts_dict_1)
+    #print(f"failure prob {failure_prob}")
     #match = fingerprint_best_match(plaintexts_dict_1[0], plaintexts_dict_1)
     #print(f"Match {match}")
     #fingerprint_space = process_fingerprint( plaintexts_dict_1, " ")
