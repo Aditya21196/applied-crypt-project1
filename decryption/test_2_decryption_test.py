@@ -21,7 +21,7 @@ def load_dictionary():
 def make_a_dict_2_plaintext(words, seed = None):
     """
     takes a list of dictionary words
-    returns a 500 character plaintext
+    returns a randomly generated 500 character plaintext
     """
     random.seed(seed)
     word_count = len(words)
@@ -75,18 +75,21 @@ def find_plaintext(words, ciphertext):
         print(f"cipher_words{cipher_words}")
 
     plaintext = []
+    return_string = ""
     cipher_word_idx = 0
 
     while cipher_word_idx != len(cipher_words):
         i = cipher_word_idx + 1
         while i != len(cipher_words) + 1:
             current_cipher_word = "".join(cipher_words[cipher_word_idx:i])
+
             if DEBUG:
                 print(f"cipher_word_idx {cipher_word_idx}")
                 print(f"i {i}")
                 print(f"current_cipher_word {current_cipher_word}")
                 #print(f"plaintext {plaintext}")
                 print()
+
             current_word = find_word(words, current_cipher_word)
             if len(current_word) != 0:
                 plaintext.append(current_word)
@@ -95,20 +98,46 @@ def find_plaintext(words, ciphertext):
             i += 1
         cipher_word_idx += 1
 
-    return plaintext
+    plaintext_word_option_counts = [len(el) for el in plaintext]
+
+    if max(plaintext_word_option_counts) == 1:
+        if DEBUG:
+            print("here - all one")
+
+        for i, entry in enumerate(plaintext):
+            if i > 0:
+                return_string += " "
+            return_string += "".join(entry)
+
+        return_string_length = len(return_string)
+
+        if return_string_length < 500:
+            return_string += " "
+            chars_to_fill = 500 - return_string_length - 1 # the plus one is the added space
+
+            truncated_dict = [el[:chars_to_fill] for el in words if el[chars_to_fill - 1] == ciphertext[-1]]
+            print(f"truncated dict: {truncated_dict}")
+
+    else:  #multiple possibilities
+        if DEBUG:
+            print("here - some multiples")
+        pass
+
+    return return_string
+
 
 
 
 def main():
     dict2 = load_dictionary()
-    seed = 500
+    seed = 150
 
     # Generate Test Data
     plaintext = make_a_dict_2_plaintext(dict2, seed)
     print(f"dict plaintext with seed({seed}):\n{plaintext}\n")
 
     # Encrypt Test Data
-    ciphertext = encrypt.encrypt(plaintext, encrypt.BLANK_KEY, .30, seed)
+    ciphertext = encrypt.encrypt(plaintext, encrypt.BLANK_KEY, .40, seed)
     #print(f"ciphertext with seed({seed}) of length {len(ciphertext)}:\n{ciphertext}\n")
 
     # Try to Generate Plaintext
