@@ -2,7 +2,7 @@
 Module to test dictionary 2 attacks
 
 """
-DEBUG = True
+DEBUG = False
 
 from pydoc import plain
 import random
@@ -181,14 +181,49 @@ def get_next_key(current_key, key_options):
             a list of key options
     returns: the next permutation
     """
+    adjustable_idx = [i for i,num in enumerate(key_options) if num > 1]
+    current_key_changable_values = [current_key[i] for i in adjustable_idx]
+    max_change_value = [key_options[i]-1 for i in adjustable_idx]
+
+    num_active_changes = 0
+    for entry in current_key:
+        if entry > 0:
+            num_active_changes += 1
+
+    new_key = current_key
+    blank_key = [0 for element in new_key]
+
+    if num_active_changes == 0:
+        new_key[adjustable_idx[0]] += 1
+    else:  # all cases now here
+        if key_saturated(num_active_changes, current_key_changable_values, max_change_value):
+            new_num_active_changes = num_active_changes + 1
+            for i in range(new_num_active_changes):
+                blank_key[adjustable_idx[i]] = 1
+        else:
+            #increment next column value
+            # find last least saturated bit
+            pass
+
+
+
     if DEBUG:
         print(f"ln 185 - current_key {current_key}")
         print(f"ln 186 - key_options: {key_options}")
+        #print(f"ln188 index of adjustable {adjustable_idx}")
+        print(f"current_idx_val {current_key_changable_values}")
+        print(f"max_change_value {max_change_value}")
+        print(f"num_active_changes {num_active_changes}")
+
 
     # do some processing
-    return current_key
+    return new_key
 
-
+def key_saturated(n, current_vals, max_vals):
+    for i, (cur, max) in enumerate(zip(current_vals, max_vals)):
+        if cur + 1 != max:
+            return False
+    return True
 
 def pad_ending(num_chars, dictionary, cipher_words):
     last_char = cipher_words[-1][-1]
@@ -242,7 +277,7 @@ def find_plaintext(words, ciphertext):
 
 def main():
     dict2 = load_dictionary()
-    seed = 150
+    seed = 500
 
     t_array = [[]]
 
@@ -253,7 +288,7 @@ def main():
     print(f"dict plaintext with seed({seed}):\n{plaintext}\n")
 
     # Encrypt Test Data
-    ciphertext = encrypt.encrypt(plaintext, encrypt.BLANK_KEY, .7, seed)
+    ciphertext = encrypt.encrypt(plaintext, encrypt.BLANK_KEY, .4, seed)
     #print(f"ciphertext with seed({seed}) of length {len(ciphertext)}:\n{ciphertext}\n")
 
     # Try to Generate Plaintext
