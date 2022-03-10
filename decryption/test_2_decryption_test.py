@@ -267,22 +267,25 @@ def find_plaintext(words, ciphertext):
 def stress_test(low_p, high_p, step, num_repeats, dict):
     seed = 0
     for p in range(low_p, high_p, step):
+        prob = p / 100
         for j in range(num_repeats):
+            print(f"Current Iteration p {p} j{j}")
             plaintext = make_a_dict_2_plaintext(dict, seed)
-            ciphertext = encrypt.encrypt(plaintext, encrypt.BLANK_KEY, p, seed)
+            ciphertext = encrypt.encrypt(plaintext, encrypt.BLANK_KEY, prob, seed)
             cleaned_ciphertext = preprocess.remove_duplicate_char_triplets(ciphertext)
             plaintext_guess = find_plaintext(dict, cleaned_ciphertext)
             try:
                 assert len(plaintext_guess) == 500
-            except AssertionError:
-                print(f"error caused with p {p} j{j}")
+            except AssertionError as e:
+                print(f"AssertionError - error caused with p {p} j{j}")
+                raise e
             seed += 1
 
 
 
 def main():
     dict2 = load_dictionary()
-    stress_test(0,40,5, 1, dict2)
+    stress_test(10,40,5, 10, dict2)
 
 
     """
