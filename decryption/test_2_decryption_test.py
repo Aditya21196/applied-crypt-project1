@@ -11,6 +11,8 @@ from tracemalloc import start
 import preprocess
 import encrypt
 import decrypt
+import frequency_analysis
+import collections
 
 
 #setup
@@ -343,21 +345,82 @@ def stress_test(low_p, high_p, step, num_repeats, dict):
             seed += 1
 
 
+def generate_test_char_frequencies(dict, test_size, hash_length):
+    """
+    returns  frequencies -> a list of (key, frequency) pairs
+            letter_count -> char counts
+    """
+    seed = 0
+    frequency_counts = {}
+    letter_count = collections.Counter()
+    for i in range(test_size):
+        text = make_a_dict_2_plaintext(dict, seed)
+        fq = frequency_analysis.rank_letters_by_freq(text)
+        fq_full_hash = generate_hash_key(fq)
+        fq_hash = fq_full_hash[:hash_length]
+        letter_count.update(fq_hash)
+        if fq_hash not in frequency_counts:
+            frequency_counts[fq_hash] = 1
+        else:
+            frequency_counts[fq_hash] += 1
+        seed += 1
+
+    frequencies = [(k, v) for k,v in frequency_counts.items()]
+    frequencies.sort(key = lambda x: x[1], reverse=True)
+    return frequencies, letter_count
+
+
+def generate_hash_key(a_frequency):
+    """
+    input -> a frequency from rank_letters_by_frequency
+    output -> a string that can be used as a hash map key
+    """
+    key = ""
+    for (char, _) in a_frequency:
+        key += char
+    return key
+
+
+
+def frequency_test(test_size, hash_length_in):
+    dict2 = load_dictionary()
+    test, counts = generate_test_char_frequencies(dict = dict2, test_size = test_size, hash_length = hash_length_in)
+
+
+    #report Statistics
+    print(f"Test Size {test_size}")
+    print(f"First {hash_length_in} most significant chars")
+
+    print(f"Total unique keys: {len(test)}")
+    print(f"Char Counts: {counts}\n")
+
+    print("All test Keys:")
+    for entry in test:
+        print(entry)
+
+
 
 def main():
-    dict2 = load_dictionary()
-    stress_test(low_p = 70,high_p = 76, step = 1, num_repeats = 10, dict = dict2)
 
+    #stress_test(low_p = 70,high_p = 76, step = 1, num_repeats = 10, dict = dict2)
+
+    frequency_test(test_size=250000, hash_length_in=6)
+
+
+
+    #for entry in test:
+     #   if test[entry] > 1:
+      #      print(f"{entry} : count {test[entry]}")
 
     """
-    seed = 37
+
 
     # Generate Test Data
     plaintext = make_a_dict_2_plaintext(dict2, seed)
     print(f"dict plaintext with seed({seed}):\n{plaintext}\n")
 
     # Encrypt Test Data
-    ciphertext = encrypt.encrypt(plaintext, encrypt.BLANK_KEY, .76, seed)
+    ciphertext = encrypt.encrypt(plaintext, encrypt.BLANK_KEY, .73, seed)
     print(f"ciphertext with seed({seed}) of length {len(ciphertext)}:\n{ciphertext}\n")
 
     # Try to Generate Plaintext
@@ -373,8 +436,8 @@ def main():
 
 
     #print(is_word_in_ciphertext("moponwsetk","moponwsetk"))
-    """
 
+    """
 
 if __name__ == "__main__":
     main()
