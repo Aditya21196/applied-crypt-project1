@@ -35,11 +35,12 @@ def char_key_mapping_from_key_mapping(key_mapping):
     return char_key_mapping
 
 
-def encrypt(user_message, user_key, probability = PROBABILITY_REPLACEMENT):
+def encrypt(user_message, user_key, probability = PROBABILITY_REPLACEMENT, seed = None):
     """
     Takes in a user message, user key, and optionaly a probability value (0, 1]
     Outputs Ciphertext based on the encryption algorithm for Project 1
     """
+    random.seed(seed)
     c_text = []
     message_ptr = 0
     num_rand_chars = 0

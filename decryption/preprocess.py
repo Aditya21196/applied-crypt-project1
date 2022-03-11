@@ -59,6 +59,35 @@ def make_words_in_texts_index(texts, delimiter=" "):
     return word_text_mapping
 
 
+def remove_duplicate_char_triplets(ciphertext):
+    """
+    Takes in a ciphertext
+    returns a ciphertext with all duplicate character tripples or greater removed
+    """
+    processed_text = ciphertext[:2]
+    for i in range(2, len(ciphertext)):
+        char = ciphertext[i]
+        if char == ciphertext[i-1] and char == ciphertext[i-2]:
+            continue
+        processed_text += char
+    return processed_text
+
+
+def remove_double_duplicate(target_char, ciphertext):
+    """
+    Takes in a ciphertext
+    removes any duplicates of the char
+        Assume remove triplets has already run
+    """
+    processed_text = ciphertext[:1]
+    for i in range(1, len(ciphertext)):
+        char = ciphertext[i]
+        if char == target_char and char == ciphertext[i-1]:
+            continue
+        processed_text += char
+    return processed_text
+
+
 def main():
     """
     Main function when called form CLI
