@@ -1,7 +1,9 @@
+import sys
+sys.path.insert(0, "../dictionaries")
 import numpy as np
 
 def get_plaintext():
-    with open("word_dictionary_test2.txt", "r") as f:
+    with open("../dictionaries/official_dictionary_2_cleaned.txt", "r") as f:
         words = [w.rstrip() for w in f]
         # Removes the newline character at the end of the string 
         # before appending it to the list
