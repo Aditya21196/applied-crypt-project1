@@ -3,7 +3,6 @@ sys.path.insert(0, "../encryption")
 sys.path.insert(0, "../dictionaries")
 
 import encrypt, alphabet, random, accuracy, frequency
-from decrypt import get_space_key_value
 
 with open("../dictionaries/official_dictionary_1_cleaned.txt", "r") as f:
     PLAIN_TEXTS = [line.rstrip() for line in f]
@@ -21,6 +20,23 @@ def decrypt_test_1(cipher, all_plain):
     Given a ciphertext and a number of plaintexts, returns the 
     plaintext that best matches the ciphertext.
     """
+    
+    def get_space_key_value(ciphertext):
+        """
+        returns the space key value for the ciphertext
+        works for values of p up to atleast .95
+        theoretically should work to ~p(.96)
+        """
+        word_stats = []
+
+        for char in (alphabet.get_alphabet()):
+            try:
+                word_stats.append(frequency.get_word_frequency_statistics(ciphertext, delimiter = char))
+            except KeyError:
+                pass
+
+        word_stats.sort(key = lambda x: x['stdev'])
+        return word_stats[0]['delimiter']
     
     space_val = get_space_key_value(cipher)
     words = cipher.split(space_val)
