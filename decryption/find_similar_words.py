@@ -32,16 +32,18 @@ def get_longest_common_subsequence(w1, w2):
             
     return "".join(res)
 
-#w1 = "xxxxxxaxxxxbxxxxxc"
-#w2 = "abc"
-w1 = "fxxxxindxxx sixxxxmilarxxx worrrrrds"
-w2 = "find similar words"
 
-res = count_common_letters(w1, w2)
-print("The 1st string: " + w1)
-print("The 2nd string: " + w2)
-print("The length of the longest common subsequence " + 
-      "they share is: " + str(res))
+if __name__ == "__main__":
+    #w1 = "xxxxxxaxxxxbxxxxxc"
+    #w2 = "abc"
+    w1 = "fxxxxindxxx sixxxxmilarxxx worrrrrds"
+    w2 = "find similar words"
 
-seq = get_longest_common_subsequence(w1, w2)
-print("The longest common subsequence is: " + seq)
+    res = count_common_letters(w1, w2)
+    print("The 1st string: " + w1)
+    print("The 2nd string: " + w2)
+    print("The length of the longest common subsequence " + 
+          "they share is: " + str(res))
+
+    seq = get_longest_common_subsequence(w1, w2)
+    print("The longest common subsequence is: " + seq)
