@@ -40,7 +40,7 @@ TEST_PROB = 0.1
 
 
 def split_t2_ciphertext(cipher, dictionary):
-    space_c = decrypt.get_space_key_value(t2)
+    space_c = decrypt.get_space_key_value(cipher)
     #print("The space key returned by the algorithm is: " + space_c)
     #print("The correct space key is: " + ALPHABET[KEY[0]])
     
@@ -195,4 +195,4 @@ def stress_test(rand_p, dictionary, round_cnt):
     avg_acc = sum(all_acc) / len(all_acc)
     print("Average accuracy: " + str(avg_acc))
     
-stress_test(0.2, dictionary, 50)
+stress_test(0.3, dictionary, 50)
