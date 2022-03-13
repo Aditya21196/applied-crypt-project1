@@ -2,17 +2,19 @@
 Module to test dictionary 2 attacks
 
 """
-DEBUG = True
+DEBUG = False
 
 from pydoc import plain
 import random
 import math
 from tracemalloc import start
+import alphabet
 import preprocess
 import encrypt
 import decrypt
 import frequency_analysis
 import collections
+import numpy as np
 
 
 #setup
@@ -388,15 +390,136 @@ def frequency_test(test_size, hash_length_in):
 
 
     #report Statistics
-    print(f"Test Size {test_size}")
-    print(f"First {hash_length_in} most significant chars")
+    if DEBUG:
+        print(f"Test Size {test_size}")
+        print(f"First {hash_length_in} most significant chars")
 
-    print(f"Total unique keys: {len(test)}")
-    print(f"Char Counts: {counts}\n")
+        print(f"Total unique keys: {len(test)}")
+        print(f"Char Counts: {counts}\n")
 
-    print("All test Keys:")
-    for entry in test:
+        print("All test Keys:")
+        for entry in test:
+            print(entry)
+    return test
+
+
+def calculate_key_histogram(frequency_list):
+    """
+    input, a list of tuples (let_frequency (n long), count)
+    Output, a 2d array,  i = character, j = key_position
+    """
+    count = [[0 for i in range(alphabet.get_size())] for j in range(alphabet.get_size())]
+    for key, cnt in frequency_list:
+        for position, char in enumerate(key):
+            count[alphabet.get_int_from_char(char)][position] += cnt
+    row_total = [sum(entry) for entry in count]
+    column_total = [0 for i in range(alphabet.get_size())]
+    for row in count:
+        for i, num in enumerate(row):
+            column_total[i] += num
+
+
+    return count, row_total, column_total
+
+
+def print_key_histogram_matrix(a_matrix):
+    """
+    prints the bigram frequency matrix
+    """
+    for i, row in enumerate(a_matrix):
+        char = alphabet.get_char_from_int(i)
+        r = f"'{char}'  "
+        for entry in row:
+            r += str(entry) + " "
+        print(r)
+
+
+def key_space_filter_by_alpha(count, col_stats, alpha):
+    test_size = col_stats[0]
+    columns = []
+    for col in range(alphabet.get_size()):
+        column = []
+        for row in range(alphabet.get_size()):
+            col_stat = count[row][col]
+            column.append((alphabet.get_char_from_int(row),col_stat, col_stat / test_size))
+        column.sort(key = lambda x: x[1], reverse=True)
+        columns.append(column)
+
+    key_space_filtered = []
+    for entry in columns:
+        filtered = [e for e in entry if e[2] > alpha]
+        key_space_filtered.append(filtered)
+    return key_space_filtered
+
+
+
+def output_key_stats(count, row_stats, col_stats):
+    probabilities = []
+    test_size = col_stats[0]
+    print(f"\nOutputting Key Stats")
+    print(f"For each character we see how likely it is to be the ith most frequently seen character")
+    print(f"test_size {test_size}\n\n")
+    print(f"Stats By Letter\n**************************")
+
+    for i, row in enumerate(count):
+        print(f"Stats for letter value '{alphabet.get_char_from_int(i)}'")
+        print(f"freq {row}")
+        relative = [entry / row_stats[i] for entry in row if row_stats[i] > 0]
+        probabilities.append(relative)
+        print(f"prob {relative}")
+        print(f"total occurance count {row_stats[i]}")
+        print(f"Occurance probability {row_stats[i] / test_size}")
+        print()
+
+    print(f"\n\nStats By Key Position\n**************************")
+    columns = []
+    for col in range(alphabet.get_size()):
+        column = []
+        for row in range(alphabet.get_size()):
+            col_stat = count[row][col]
+            column.append((alphabet.get_char_from_int(row),col_stat, col_stat / test_size))
+        columns.append(column)
+
+    for i, entry in enumerate(columns):
+        entry.sort(key=lambda x: x[1], reverse = True)
+        print(f"\nChar that is the {i+1}th most frequent")
         print(entry)
+        print(f"Total occurance count {col_stats[i]}")
+        print(f"Occurance Probability {col_stats[i] / test_size}")
+
+    print(f"\n\n\nRaw Matrix rows - char / cols - key position")
+    print_key_histogram_matrix(count)
+    print(f"\ndone\n")
+    return columns
+
+def generate_best_initial_mapping(key_space):
+    """
+    Takes output from key_space_filter_by_alpha
+    """
+    chars_to_pick = alphabet.get_alphabet()
+    best_key = []
+    for entry in key_space:
+
+        if len(entry) > 0:
+            i = 0
+            while i < len(entry) and entry[i][0] not in chars_to_pick:
+                i+= 1
+            if i < len(entry):
+                char = entry[i][0]
+            else:
+                char = chars_to_pick[0]
+            to_remove_idx = chars_to_pick.index(char)
+            chars_to_pick = chars_to_pick[:to_remove_idx] + chars_to_pick[to_remove_idx + 1:]
+            best_key.append(char)
+        else:
+            continue
+
+    best_key = best_key + list(chars_to_pick)
+
+    return best_key
+
+
+
 
 
 
@@ -404,7 +527,26 @@ def main():
 
     #stress_test(low_p = 70,high_p = 76, step = 1, num_repeats = 10, dict = dict2)
 
-    frequency_test(test_size=50000, hash_length_in=27)
+    f_test = frequency_test(test_size=100000, hash_length_in=27)
+
+    f_hist_cnt, f_hist_row, f_hist_col = calculate_key_histogram(f_test)
+
+
+    a = .001
+    key_space =  key_space_filter_by_alpha(f_hist_cnt, f_hist_col, a)
+
+    #key_space = output_key_stats(f_hist_cnt, f_hist_row, f_hist_col)
+
+    for entry in key_space:
+        print(entry)
+
+    search_size = [len(entry) for entry in key_space if len(entry) > 0 ]
+
+    print(f"search size {search_size} total is {math.prod(search_size)}")
+
+    best_key = generate_best_initial_mapping(key_space)
+
+    print(f"best_key {best_key} and len of key {len(best_key)}")
 
 
 
