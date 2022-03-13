@@ -4,6 +4,7 @@ sys.path.insert(0, "../dictionaries")
 
 import encrypt, alphabet, random, accuracy, frequency, decrypt
 from test2_generate_plaintext import get_plaintext
+from find_similar_words import get_longest_common_subsequence
 
 with open("../dictionaries/official_dictionary_1_cleaned.txt", "r") as f:
     PLAIN_TEXTS = [line.rstrip() for line in f]
@@ -13,9 +14,9 @@ with open("../dictionaries/official_dictionary_2_cleaned.txt", "r") as f:
     
 min_len = min(len(w) for w in dictionary)
 len_sum = sum(len(w) for w in dictionary)
-print("The minimum length of a word in the dictionary is: " + 
-      str(min_len) + " characters")
-print("The total number of characters in the dictionary is: " + str(len_sum))
+#print("The minimum length of a word in the dictionary is: " + 
+#      str(min_len) + " characters")
+#print("The total number of characters in the dictionary is: " + str(len_sum))
 
 ALPHABET = alphabet.get_alphabet()
 KEY = encrypt.generate_key_mapping()
@@ -24,23 +25,24 @@ KEY = encrypt.generate_key_mapping()
 TEST_PROB = 0.1
 # The constant that stores the probability of a random character
 
-t2 = encrypt.encrypt(get_plaintext(), KEY, TEST_PROB)
-print("The length of the Test 2 plaintext is: " + str(len(t2)) + " characters")
+t2_plain = get_plaintext()
+t2 = encrypt.encrypt(t2_plain, KEY, TEST_PROB)
+#print("The length of the Test 2 plaintext is: " + str(len(t2)) + " characters")
 
 space_c = decrypt.get_space_key_value(t2)
-print("The space key returned by the algorithm is: " + space_c)
-print("The correct space key is: " + ALPHABET[KEY[0]])
+#print("The space key returned by the algorithm is: " + space_c)
+#print("The correct space key is: " + ALPHABET[KEY[0]])
 
 words = sorted(t2.split(space_c), key=lambda x: len(x), reverse=True)
 
-print(words)
-print(len(words))
+#print(words)
+#print(len(words))
 
 
 def split_t2_ciphertext(cipher, dictionary):
     space_c = decrypt.get_space_key_value(t2)
-    print("The space key returned by the algorithm is: " + space_c)
-    print("The correct space key is: " + ALPHABET[KEY[0]])
+    #print("The space key returned by the algorithm is: " + space_c)
+    #print("The correct space key is: " + ALPHABET[KEY[0]])
     
     words = []
     i = j = 0
@@ -66,5 +68,126 @@ def split_t2_ciphertext(cipher, dictionary):
     return sorted(words, key=lambda w: len(w), reverse=True)
 
 words_2 = split_t2_ciphertext(t2, dictionary)
-print(words_2)
-print(len(words_2))
+#print(words_2)
+#print(len(words_2))
+
+def find_matches_for_duplicates(words, dictionary):
+    res = set()
+    h = {w: True for w in dictionary}
+    
+    for i in range(len(words)):
+        for j in range(i + 1, len(words)):
+            seq = get_longest_common_subsequence(words[i], words[j])
+            for w in h:
+                if len(w) == len(seq):
+                    res.add((w, seq))
+                    
+    return sorted(list(res), key=lambda x: len(x[0]), reverse=True)
+
+dup = find_matches_for_duplicates(words_2, dictionary)
+#print(dup)
+#print(len(dup))
+
+def map_char_in_duplicates(matches, ciphertext):
+    cnt = [0] * len(matches)
+    for i, (p, c) in enumerate(matches):
+        mapping = {x: y for x in c for y in p}
+        for j, (p2, c2) in enumerate(matches):
+            if j == i:
+                continue
+            
+            dec = []
+            for x in c2:
+                if x in mapping:
+                    dec.append(mapping[x])
+                else:
+                    dec.append(x)
+            
+            dec = "".join(dec)
+            seq = get_longest_common_subsequence(p2, dec)
+            cnt[i] += len(seq)
+            
+    for i in range(len(cnt)):
+        cnt[i] = [i, cnt[i]]
+           
+    cnt.sort(key=lambda x: x[1], reverse=True)
+    #print(cnt)
+    
+    space_c = decrypt.get_space_key_value(ciphertext)
+    
+    m = {space_c: " "}
+    i = 0
+    while len(m) < 27 and i < len(cnt):
+        j = cnt[i][0]
+        p, c = matches[i]
+        for k, x in enumerate(c):
+            if x in m:
+                continue
+            m[x] = p[k]
+        
+        i += 1
+        
+    all_decrypted = []
+    for p, c in matches:
+        d = "".join([m[x] for x in c])
+        all_decrypted.append([p, c, d])
+        
+    #print(all_decrypted)
+    
+    return m
+        
+m = map_char_in_duplicates(dup, t2)
+
+def find_test2_accuracy(mapping, ciphertext, dictionary):
+    t2_dec = []
+    for x in ciphertext:
+        if x not in m:
+            continue
+        t2_dec.append(m[x])
+
+    t2_dec = "".join(t2_dec)
+    #print(t2_dec)
+
+    dec_words = t2_dec.split(" ")
+    dec_2 = []
+
+    for w in dec_words:
+        all_len = []
+        for w2 in dictionary:
+            seq = get_longest_common_subsequence(w, w2)
+            all_len.append((w2, len(seq)))
+
+        all_len.sort(key=lambda x: x[1], reverse=True)
+        dec_2.append(all_len[0][0])
+
+    final_dec = " ".join(dec_2)
+    #print("\n\nFinal decrypted text: ")
+    #print(final_dec)
+    #print("\n\nOriginal plaintext: ")
+    #print(t2_plain)
+
+    seq = get_longest_common_subsequence(final_dec, t2_plain)
+    acc = len(seq) / len(t2_plain)
+    #print("\n\nAccuracy: " + str(acc))
+    
+    return acc
+    
+def stress_test(rand_p, dictionary, round_cnt):
+    all_acc = []
+    for _ in range(round_cnt):
+        keys = encrypt.generate_key_mapping()
+        t2_plain = get_plaintext()
+        t2_cipher = encrypt.encrypt(t2_plain, keys, rand_p)
+
+        words = split_t2_ciphertext(t2_cipher, dictionary)
+        matches = find_matches_for_duplicates(words, dictionary)
+        m = map_char_in_duplicates(matches, t2_cipher)
+        acc = find_test2_accuracy(m, t2_cipher, dictionary)
+        all_acc.append(acc)
+    
+    print("Random character probability: " + str(rand_p))
+    print("Rounds completed: " + str(round_cnt))
+    avg_acc = sum(all_acc) / len(all_acc)
+    print("Average accuracy: " + str(avg_acc))
+    
+stress_test(0.1, dictionary, 50)
