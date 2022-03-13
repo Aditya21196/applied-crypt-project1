@@ -18,14 +18,8 @@ def get_plaintext():
 
     return " ".join(txt)[:500]
 
-t = get_plaintext()
-print(t)
-print(len(t))
 
-"""
 if __name__ == "__main__":
-    # If the script is run directly, save the plaintext as a new file
-
-    with open("plaintext_test2.txt", "w") as f:
-        f.write(get_plaintext())
-"""
+    t = get_plaintext()
+    print(t)
+    print(len(t))
