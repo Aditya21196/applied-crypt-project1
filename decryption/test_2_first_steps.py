@@ -138,12 +138,12 @@ def map_char_in_duplicates(matches, ciphertext):
         
 #m = map_char_in_duplicates(dup, t2)
 
-def find_test2_accuracy(mapping, ciphertext, dictionary):
+def find_test2_accuracy(mapping, plaintext, ciphertext, dictionary):
     t2_dec = []
     for x in ciphertext:
-        if x not in m:
+        if x not in mapping:
             continue
-        t2_dec.append(m[x])
+        t2_dec.append(mapping[x])
 
     t2_dec = "".join(t2_dec)
     #print(t2_dec)
@@ -166,8 +166,8 @@ def find_test2_accuracy(mapping, ciphertext, dictionary):
     #print("\n\nOriginal plaintext: ")
     #print(t2_plain)
 
-    seq = get_longest_common_subsequence(final_dec, t2_plain)
-    acc = len(seq) / len(t2_plain)
+    seq = get_longest_common_subsequence(final_dec, plaintext)
+    acc = len(seq) / len(plaintext)
     #print("\n\nAccuracy: " + str(acc))
     
     return acc
@@ -182,7 +182,7 @@ def stress_test(rand_p, dictionary, round_cnt):
         words = split_t2_ciphertext(t2_cipher, dictionary)
         matches = find_matches_for_duplicates(words, dictionary)
         m = map_char_in_duplicates(matches, t2_cipher)
-        acc = find_test2_accuracy(m, t2_cipher, dictionary)
+        acc = find_test2_accuracy(m, t2_plain, t2_cipher, dictionary)
         all_acc.append(acc)
         
         completion = (i + 1) / round_cnt * 100
