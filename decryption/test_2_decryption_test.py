@@ -404,7 +404,7 @@ def main():
 
     #stress_test(low_p = 70,high_p = 76, step = 1, num_repeats = 10, dict = dict2)
 
-    frequency_test(test_size=250000, hash_length_in=6)
+    frequency_test(test_size=50000, hash_length_in=27)
 
 
 
