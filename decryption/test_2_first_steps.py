@@ -12,28 +12,28 @@ with open("../dictionaries/official_dictionary_1_cleaned.txt", "r") as f:
 with open("../dictionaries/official_dictionary_2_cleaned.txt", "r") as f:
     dictionary = [line.rstrip() for line in f]
     
-min_len = min(len(w) for w in dictionary)
-len_sum = sum(len(w) for w in dictionary)
+#min_len = min(len(w) for w in dictionary)
+#len_sum = sum(len(w) for w in dictionary)
 #print("The minimum length of a word in the dictionary is: " + 
 #      str(min_len) + " characters")
 #print("The total number of characters in the dictionary is: " + str(len_sum))
 
-ALPHABET = alphabet.get_alphabet()
-KEY = encrypt.generate_key_mapping()
+#ALPHABET = alphabet.get_alphabet()
+#KEY = encrypt.generate_key_mapping()
 # The first element in KEY is the substitution for the space character
 
 TEST_PROB = 0.1
 # The constant that stores the probability of a random character
 
-t2_plain = get_plaintext()
-t2 = encrypt.encrypt(t2_plain, KEY, TEST_PROB)
+#t2_plain = get_plaintext()
+#t2 = encrypt.encrypt(t2_plain, KEY, TEST_PROB)
 #print("The length of the Test 2 plaintext is: " + str(len(t2)) + " characters")
 
-space_c = decrypt.get_space_key_value(t2)
+#space_c = decrypt.get_space_key_value(t2)
 #print("The space key returned by the algorithm is: " + space_c)
 #print("The correct space key is: " + ALPHABET[KEY[0]])
 
-words = sorted(t2.split(space_c), key=lambda x: len(x), reverse=True)
+#words = sorted(t2.split(space_c), key=lambda x: len(x), reverse=True)
 
 #print(words)
 #print(len(words))
@@ -67,7 +67,7 @@ def split_t2_ciphertext(cipher, dictionary):
         
     return sorted(words, key=lambda w: len(w), reverse=True)
 
-words_2 = split_t2_ciphertext(t2, dictionary)
+#words_2 = split_t2_ciphertext(t2, dictionary)
 #print(words_2)
 #print(len(words_2))
 
@@ -84,7 +84,7 @@ def find_matches_for_duplicates(words, dictionary):
                     
     return sorted(list(res), key=lambda x: len(x[0]), reverse=True)
 
-dup = find_matches_for_duplicates(words_2, dictionary)
+#dup = find_matches_for_duplicates(words_2, dictionary)
 #print(dup)
 #print(len(dup))
 
@@ -136,7 +136,7 @@ def map_char_in_duplicates(matches, ciphertext):
     
     return m
         
-m = map_char_in_duplicates(dup, t2)
+#m = map_char_in_duplicates(dup, t2)
 
 def find_test2_accuracy(mapping, ciphertext, dictionary):
     t2_dec = []
@@ -174,7 +174,7 @@ def find_test2_accuracy(mapping, ciphertext, dictionary):
     
 def stress_test(rand_p, dictionary, round_cnt):
     all_acc = []
-    for _ in range(round_cnt):
+    for i in range(round_cnt):
         keys = encrypt.generate_key_mapping()
         t2_plain = get_plaintext()
         t2_cipher = encrypt.encrypt(t2_plain, keys, rand_p)
@@ -184,10 +184,15 @@ def stress_test(rand_p, dictionary, round_cnt):
         m = map_char_in_duplicates(matches, t2_cipher)
         acc = find_test2_accuracy(m, t2_cipher, dictionary)
         all_acc.append(acc)
+        
+        completion = (i + 1) / round_cnt * 100
+        print(str(completion) + "% completed")
     
     print("Random character probability: " + str(rand_p))
     print("Rounds completed: " + str(round_cnt))
+    print("Lowest accuracy: " + str(min(all_acc)))
+    print("Highest accuracy: " + str(max(all_acc)))
     avg_acc = sum(all_acc) / len(all_acc)
     print("Average accuracy: " + str(avg_acc))
     
-stress_test(0.1, dictionary, 50)
+stress_test(0.2, dictionary, 50)
