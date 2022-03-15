@@ -98,10 +98,10 @@ def main():
     """
     print("\nDictionary 1")
     dict_1 = get_dictionary_1()
-    for entry in dict_1:
-        print(f"{len(entry)}\n{entry}")
+    for i, entry in enumerate(dict_1):
+        print(f"Text {i+1} length: {len(entry)} characters\n'{entry}'\n")
 
-    print("\nDictionary 2")
+    print("\nDictionary 2:")
     dict_2 = get_dictionary_2()
     for entry in dict_2:
         print(entry)
