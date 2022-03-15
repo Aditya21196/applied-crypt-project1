@@ -2,7 +2,6 @@
 The dictionaries for testing
 """
 
-
 # dict 1
 _text_1 = "underwaists wayfarings fluty analgia refuels transcribing nibbled okra buttonholer venalness hamlet praus apprisers presifted cubital walloper dissembler bunting wizardries squirrel preselect befitted licensee encumbrances proliferations tinkerer egrets recourse churl kolinskies ionospheric docents unnatural scuffler muches petulant acorns subconscious xyster tunelessly boners slag amazement intercapillary manse unsay embezzle stuccoer dissembles batwing valediction iceboxes ketchups phonily con"
 
@@ -15,6 +14,7 @@ _text_4 = "cygnets chatterers pauline passive expounders cordwains caravel antid
 _text_5 = "ovulatory geriatric hijack nonintoxicants prophylactic nonprotective skyhook warehouser paganized brigading european sassier antipasti tallyho warmer portables selling scheming amirate flanker photosensitizer multistage utile paralyzes indexer backrests tarmac doles siphoned casavas mudslinging nonverbal weevil arbitral painted vespertine plexiglass tanker seaworthiness uninterested anathematizing conduces terbiums wheelbarrow kabalas stagnation briskets counterclockwise hearthsides spuriously s"
 
 _dict_1 = [_text_1, _text_2, _text_3, _text_4, _text_5 ]
+
 
 def get_dictionary_1():
     """
@@ -92,9 +92,10 @@ def make_random_dictionary_2_plaintext(seed = None):
     return message[:500]
 
 
-
-
 def main():
+    """
+    Main Function
+    """
     print("\nDictionary 1")
     dict_1 = get_dictionary_1()
     for entry in dict_1:
@@ -113,9 +114,6 @@ def main():
     random_text_2 = make_random_dictionary_2_plaintext()
     print(f"\nrandom text 2 (no seed) - text length: {len(random_text_2)}\n{random_text_2}")
 
+
 if __name__ == "__main__":
     main()
-
-
-
-# dict 2
