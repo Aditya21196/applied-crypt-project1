@@ -54,6 +54,23 @@ def get_space_key_value(ciphertext):
     word_stats.sort(key = lambda x: x['stdev'])
     return word_stats[0]['delimiter']
 
+def get_top_n_space_key_value(ciphertext, n):
+    """
+    returns the space key value for the ciphertext
+
+    """
+    word_stats = []
+
+    for char in (alphabet.get_alphabet()):
+        try:
+            word_stats.append(frequency.get_word_frequency_statistics(ciphertext, delimiter = char))
+        except KeyError:
+            pass
+
+    word_stats.sort(key = lambda x: x['stdev'])
+    top_n = word_stats[:n]
+    return [x['delimiter'] for x in top_n]
+
 
 def get_char_mapping(ciphertext_stats):
     """return a map of probable vowels"""
@@ -149,9 +166,9 @@ def stress_test_identify_space_char(texts):
 
 
 
-def calc_identify_space_char_error_rate(texts, low, high, step):
+def calc_identify_space_char_error_rate(texts, low, high, step, n = 1):
     print(f"Get_Space_Key_Value Stress Test")
-    print(f"Num Errors, 100 tests at each p value from {low} to {high} in steps of size {step}\n")
+    print(f"Num Errors, 100 tests at each p value from {low} to {high} in steps of size {step} for top {n} space candidates\n")
     seed = 0
     errors = {} #k = p, v = error count out of 100
     for i in range(low, high+1, step):
@@ -160,11 +177,11 @@ def calc_identify_space_char_error_rate(texts, low, high, step):
         for i in range(100):
             text = texts[random.randint(0, len(texts)-1)]
             encrypted_text = encrypt.encrypt(text, encrypt.BLANK_KEY, probability=prob, seed = seed)
-            space = get_space_key_value(encrypted_text)
-            if space != " ":
+            space = get_top_n_space_key_value(encrypted_text, n)
+            if " " not in space:
                 errors[prob] += 1
             seed += 1
-        print((f"p: {prob:.2f}\tnum errors: {errors[prob]} out of 100"))
+        print((f"p: {prob:.2f}\tnum errors: {errors[prob]:2} out of 100"))
     return errors
 
 
@@ -311,10 +328,8 @@ def main():
 
     plaintexts = plaintexts_dict_1 + [" ".join(plaintexts_dict_2)]
 
-    calc_identify_space_char_error_rate(plaintexts_dict_1,0, 5, 2)
+    calc_identify_space_char_error_rate(plaintexts_dict_1,0, 90, 1, n=3)
 
-    print("\n\n*** High P Value Tests ***\n\n")
-    calc_identify_space_char_error_rate(plaintexts_dict_1,0, 2, 2)
 
     #broke_at = stress_test_identify_space_char(plaintexts_dict_1)
     #print(f"Space broke at {broke_at}")

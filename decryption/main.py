@@ -17,6 +17,11 @@ def get_user_text():
 
     return u_text
 
+def p_estimate(ciphertext):
+    """
+    returns an estimate (p-hat) for the p used to encrypt the ciphertext
+    """
+    return 1 - (500/len(ciphertext))
 
 def main():
     """
