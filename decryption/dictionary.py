@@ -95,17 +95,23 @@ def make_random_dictionary_2_plaintext(seed = None):
 
 
 def main():
+    print("\nDictionary 1")
     dict_1 = get_dictionary_1()
     for entry in dict_1:
         print(f"{len(entry)}\n{entry}")
 
-    print()
+    print("\nDictionary 2")
     dict_2 = get_dictionary_2()
     for entry in dict_2:
         print(entry)
 
-    random_text = make_random_dictionary_2_plaintext()
-    print(f"random text - text length: {len(random_text)}\n{random_text}")
+    # with seed
+    random_text = make_random_dictionary_2_plaintext(100)
+    print(f"\nrandom text (with seed) - text length: {len(random_text)}\n{random_text}")
+
+    # without seed
+    random_text_2 = make_random_dictionary_2_plaintext()
+    print(f"\nrandom text 2 (no seed) - text length: {len(random_text_2)}\n{random_text_2}")
 
 if __name__ == "__main__":
     main()
