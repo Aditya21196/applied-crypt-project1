@@ -138,21 +138,21 @@ def get_word_frequency_statistics(a_string, delimiter = ' '):
     lengths = [len(word) for word in word_list]
     stats = {}
     stats["delimiter"] = delimiter
-    stats["num_of_delimiters"] = len(a_string) - sum(lengths)
-    stats["num_of_words"] = len(word_list)
-    stats["num_of_chars"] = sum(lengths)
-    stats["shortest"] = min(lengths)
-    stats["longest"] = max(lengths)
-    stats["mean"] = statistics.mean(lengths)
+    #stats["num_of_delimiters"] = len(a_string) - sum(lengths)
+    #stats["num_of_words"] = len(word_list)
+    #stats["num_of_chars"] = sum(lengths)
+    #stats["shortest"] = min(lengths)
+    #stats["longest"] = max(lengths)
+    #stats["mean"] = statistics.mean(lengths)
     stats["stdev"] = statistics.stdev(lengths)
-    stats["median"] = statistics.median(lengths)
-    stats["mode"] = statistics.mode(lengths)
-    stats["word_lengths"] = lengths
-    stats["word_list"] = word_list
-    stats["monogram_frequency"] = n_gram_freq(a_string, 1)
-    bigram_matrix = bigram_frequency(a_string)
-    stats["bigram_frequency"] = process_bigram_dictionary(bigram_matrix)
-    stats["duplicates"] = duplicates(bigram_matrix)
+    #stats["median"] = statistics.median(lengths)
+    #stats["mode"] = statistics.mode(lengths)
+    #stats["word_lengths"] = lengths
+    #stats["word_list"] = word_list
+    #stats["monogram_frequency"] = n_gram_freq(a_string, 1)
+    #bigram_matrix = bigram_frequency(a_string)
+    #stats["bigram_frequency"] = process_bigram_dictionary(bigram_matrix)
+    #stats["duplicates"] = duplicates(bigram_matrix)
     return stats
 
 
