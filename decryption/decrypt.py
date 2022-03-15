@@ -328,9 +328,10 @@ def main():
 
     plaintexts = plaintexts_dict_1 + [" ".join(plaintexts_dict_2)]
 
-    calc_identify_space_char_error_rate(plaintexts_dict_1,0, 90, 1, n=3)
+    print(diff_extraction_strategy(plaintexts[0]))
 
 
+    #calc_identify_space_char_error_rate(plaintexts_dict_1,0, 90, 1, n=3)
     #broke_at = stress_test_identify_space_char(plaintexts_dict_1)
     #print(f"Space broke at {broke_at}")
 
