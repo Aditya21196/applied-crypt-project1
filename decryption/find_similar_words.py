@@ -26,11 +26,17 @@ def get_longest_common_subsequence(w1, w2):
             dp[i][j] = max(dp[i][j - 1], dp[i - 1][j - 1] + x, dp[i - 1][j])
             
     res = []
-    for i in range(1, len(dp[-1])):
-        if dp[-1][i] > dp[-1][i - 1]:
-            res.append(w1[i - 1])
+    k = len(dp[-1]) - 1
+    for i in reversed(range(len(dp) - 1)):
+        j = i + 1
+        if dp[i][k] == dp[j][k]:
+            continue
+        while k >= 0 and dp[i][k] < dp[j][k]:
+            k -= 1
+        if k >= 0:
+            res.append(w1[k])
             
-    return "".join(res)
+    return "".join(reversed(res))
 
 
 if __name__ == "__main__":
