@@ -17,6 +17,7 @@ import alphabet
 from collections import defaultdict
 import random
 import encrypt
+import dictionary
 
 
 
@@ -41,8 +42,29 @@ def diff_extraction_strategy(cipher_txt):
 def get_space_key_value(ciphertext):
     """
     returns the space key value for the ciphertext
-    works for values of p up to atleast .95
-    theoretically should work to ~p(.96)
+
+    """
+    char_frequency = frequency.n_gram_freq(ciphertext, 1)
+    candidates = [(k,v) for k,v in char_frequency.items()]
+    candidates.sort(key=lambda x: x[1], reverse=True)
+    candidates_to_check = [k for k,_ in candidates]
+    candidates_to_check = candidates_to_check[:len(candidates_to_check)//2]
+    word_stats = []
+
+    for char in candidates_to_check:
+        try:
+            word_stats.append(frequency.get_word_frequency_statistics(ciphertext, delimiter = char))
+        except KeyError:
+            pass
+
+    word_stats.sort(key = lambda x: x['stdev'])
+    return word_stats[0]['delimiter']
+
+'''
+def get_top_n_space_key_value(ciphertext, n):
+    """
+    #returns the space key value for the ciphertext
+
     """
     word_stats = []
 
@@ -53,7 +75,13 @@ def get_space_key_value(ciphertext):
             pass
 
     word_stats.sort(key = lambda x: x['stdev'])
-    return word_stats[0]['delimiter']
+    top_n = word_stats[:n]
+    print()
+    for entry in top_n:
+        print(entry['monogram_frequency'])
+    print()
+    return [x['delimiter'] for x in top_n]
+'''
 
 def get_char_mapping(ciphertext_stats):
     """return a map of probable vowels"""
@@ -148,13 +176,27 @@ def stress_test_identify_space_char(texts):
     return -1 # error return value
 
 
-def stress_test_char_mapping(texts):
-    """
-    Used to test decryption assumptions
-    Input: a list of 500 character texts
-    Output: Prints out at what probability the assert statements fail
-    """
-    pass
+
+def calc_identify_space_char_error_rate(texts, low, high, step, tries):
+    print(f"Get_Space_Key_Value Stress Test")
+    print(f"Num Errors, {tries} tests at each p value from {low} to {high} in steps of size {step}\n")
+    seed = 0
+    errors = {} #k = p, v = error count out of 100
+    for i in range(low, high+1, step):
+        prob = i / 100
+        errors[prob] = 0
+        for i in range(tries):
+            text = texts[random.randint(0, len(texts)-1)]
+            encrypted_text = encrypt.encrypt(text, encrypt.BLANK_KEY, probability=prob, seed = seed)
+            space = get_space_key_value(encrypted_text)
+            if " " not in space:
+                errors[prob] += 1
+                #print(f"\n\nERROR -- space is '{space}'")
+
+            seed += 1
+        print((f"p: {prob:.2f}\tnum errors: {errors[prob]:2} out of {tries}"))
+    return errors
+
 
 def process_fingerprint(texts, char):
     """
@@ -265,9 +307,6 @@ def index_positions_of_last_char(text):
 
 
 
-
-
-
 def main():
     """
     Main function when called form CLI
@@ -283,45 +322,20 @@ def main():
     """
 
 
-    plaintexts_dict_1 = preprocess.read_all_lines("../dictionaries/official_dictionary_1_cleaned.txt")
-    plaintexts_dict_2 = preprocess.read_all_lines("../dictionaries/official_dictionary_2_cleaned.txt")
+    plaintexts_dict_1 = dictionary.get_dictionary_1()
+    calc_identify_space_char_error_rate(plaintexts_dict_1, low= 0, high = 25, step =1, tries = 1000)
 
-    plaintexts = plaintexts_dict_1 + [" ".join(plaintexts_dict_2)]
+    #test = "wphsfnzwlxuvolbfnlbgu bcfgquawabanwmbgfanfiutlwt xsfgnbguawatlwnognbpouiqx wwqueflo whiolkutfvfabdozuylbvfzbavuohlwtofauifiibolufanbtfinbunfssx wuefljolutwlnfysoiuiossbavuig otjbavufjblfnouksfaqolut wnwioaibnbdolujhsnbivnfvouhnbsoutflfsxdoiubsazomoluyfgqloinirunfljfguzwsoiuixbt waozugfifpfiujhzisbavbavuawapolyfswueoopbsuflybnlfsutfbanozupoitolnbaoutsombvsfiiunfaqoluiofewln baoiiuohalbagnoloinozufafn ojfnbdbaxvugwazhgoiunolyebhjiue oosyfllweuqffyfsfiuinfvafnblwauylbiqoniugwhanolgswgqebiou oflnf ibzoiuithlbwhisxui"
+    #test_out = get_space_key_value(test)
+
+    #print(f"test_out {test_out}")
+
+    #plaintexts_dict_2 = dictionary.get_dictionary_2()
+
+    #plaintexts = plaintexts_dict_1 + [" ".join(plaintexts_dict_2)]
 
 
-    broke_at = stress_test_identify_space_char(plaintexts_dict_1)
-    print(f"Space broke at {broke_at}")
-    #stress_test_char_mapping(plaintexts_dict_1)
-    #print(plaintexts_dict_1[0])
 
-    #failure_prob = stress_test_fingerprint(plaintexts_dict_1)
-    #print(f"failure prob {failure_prob}")
-    #match = fingerprint_best_match(plaintexts_dict_1[0], plaintexts_dict_1)
-    #print(f"Match {match}")
-    #fingerprint_space = process_fingerprint( plaintexts_dict_1, " ")
-
-    """
-    for i, _ in enumerate(fingerprint_space):
-        print(f"text {i}")
-        last_char = plaintexts_dict_1[i][-1:]
-        fingerprint_last = process_fingerprint( plaintexts_dict_1[i], last_char)
-        print(f"fingerprint last {fingerprint_last}\n")
-        print(f"fingerprint space {fingerprint_space[i]}")
-        print()
-    """
-
-    """
-    for i, text in enumerate(plaintexts):
-        print(f"Report Stats for text {i}")
-        #print(f"text: '{text}'")
-        #print()
-        space = get_space_key_value(text)
-        print(f"The space value is '{space}'")
-        stats = frequency.get_word_frequency_statistics(text, delimiter=space)
-        char_mapping = get_char_mapping(stats)
-        print(f"char_mapping {char_mapping}")
-        print("\n" + "-" * 40 + "\n\n")
-    """
 
 
 if __name__ == "__main__":

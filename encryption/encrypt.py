@@ -36,12 +36,11 @@ def char_key_mapping_from_key_mapping(key_mapping):
 
 def encrypt(user_message, user_key, probability = PROBABILITY_REPLACEMENT):
     """
-    Takes in a user message, user key, and optionaly a probability value (0, 1]
+    Takes in a user message, user key, and probability value (0, 1]
     Outputs Ciphertext based on the encryption algorithm for Project 1
     """
     c_text = []
     message_ptr = 0
-    num_rand_chars = 0
 
     while message_ptr < len(user_message):
         coin_value = random.random() # always less than 1
@@ -53,7 +52,6 @@ def encrypt(user_message, user_key, probability = PROBABILITY_REPLACEMENT):
         else:  # add a random char
             rand_char = ALPHABET[random.randint(0, ALPHABET_SIZE - 1)] # randint is inclusive (a, b)
             c_text.append(rand_char)
-            num_rand_chars += 1
 
     return "".join(c_text)
 
