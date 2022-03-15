@@ -328,7 +328,10 @@ def main():
 
     plaintexts = plaintexts_dict_1 + [" ".join(plaintexts_dict_2)]
 
-    print(diff_extraction_strategy(plaintexts[0]))
+    for entry in plaintexts_dict_1:
+        print(len(entry))
+
+    #print(diff_extraction_strategy(plaintexts[0]))
 
 
     #calc_identify_space_char_error_rate(plaintexts_dict_1,0, 90, 1, n=3)
