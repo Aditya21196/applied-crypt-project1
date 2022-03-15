@@ -527,7 +527,7 @@ def main():
 
     #stress_test(low_p = 70,high_p = 76, step = 1, num_repeats = 10, dict = dict2)
 
-    f_test = frequency_test(test_size=100000, hash_length_in=27)
+    f_test = frequency_test(test_size=2, hash_length_in=27)
 
     f_hist_cnt, f_hist_row, f_hist_col = calculate_key_histogram(f_test)
 
