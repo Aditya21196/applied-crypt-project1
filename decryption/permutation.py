@@ -34,7 +34,7 @@ def permutation_test():
     #assert get_next_permutation(t_start_key, test_space) == [1, 0, 0, 0]
     print(f"first key {all_keys[0]}\nlast key{all_keys[-1]}\n\n")
 
-def list_permutations(a_list):
+def permute_list(a_list):
     permutations = []
     if len(a_list) == 1:
         return a_list
@@ -42,24 +42,23 @@ def list_permutations(a_list):
         for i, char in enumerate(a_list):
             sub_list = a_list[:]
             del(sub_list[i])
-            suffix = list_permutations(sub_list)
+            suffix = permute_list(sub_list)
             for entry in suffix:
                 if isinstance(entry, list):
                     perm = [char] + entry
                 else:
                     perm = [char] + [entry]
                 permutations.append(perm)
-            sub_list = a_list
     return permutations
 
 
 def shuffle_test():
     print("Suffle Test")
-    start = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    shuffle_t = list_permutations(start)
+    start = [23, 43, 12, 55]
+    shuffle_t = permute_list(start)
     print(f"shuffle_t size {len(shuffle_t)}")
-    #for entry in shuffle_t:
-    #    print(entry)
+    for entry in shuffle_t:
+        print(entry)
 
 
 
