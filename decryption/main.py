@@ -21,7 +21,7 @@ def p_estimate(ciphertext):
     """
     returns an estimate (p-hat) for the p used to encrypt the ciphertext
     """
-    return 1 - (500/len(ciphertext))
+    return round(1 - (500/len(ciphertext)), 2)
 
 def main():
     """
@@ -29,6 +29,9 @@ def main():
     """
     user_text = get_user_text()
     print(f"\nTHE USER TEXT IS :'{user_text}'")
+
+    p_hat = p_estimate(user_text)
+    print(f"p_hat is {p_hat:}%")
 
     text_mono_frequency = frequency.monogram_frequency(user_text)
     frequency.print_frequency(text_mono_frequency)
