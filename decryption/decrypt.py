@@ -17,6 +17,7 @@ import alphabet
 from collections import defaultdict
 import random
 import encrypt
+import dictionary
 
 
 
@@ -43,9 +44,14 @@ def get_space_key_value(ciphertext):
     returns the space key value for the ciphertext
 
     """
+    char_frequency = frequency.n_gram_freq(ciphertext, 1)
+    candidates = [(k,v) for k,v in char_frequency.items()]
+    candidates.sort(key=lambda x: x[1], reverse=True)
+    candidates_to_check = [k for k,_ in candidates]
+    candidates_to_check = candidates_to_check[:len(candidates_to_check)//2]
     word_stats = []
 
-    for char in (alphabet.get_alphabet()):
+    for char in candidates_to_check:
         try:
             word_stats.append(frequency.get_word_frequency_statistics(ciphertext, delimiter = char))
         except KeyError:
@@ -54,9 +60,10 @@ def get_space_key_value(ciphertext):
     word_stats.sort(key = lambda x: x['stdev'])
     return word_stats[0]['delimiter']
 
+'''
 def get_top_n_space_key_value(ciphertext, n):
     """
-    returns the space key value for the ciphertext
+    #returns the space key value for the ciphertext
 
     """
     word_stats = []
@@ -69,8 +76,12 @@ def get_top_n_space_key_value(ciphertext, n):
 
     word_stats.sort(key = lambda x: x['stdev'])
     top_n = word_stats[:n]
+    print()
+    for entry in top_n:
+        print(entry['monogram_frequency'])
+    print()
     return [x['delimiter'] for x in top_n]
-
+'''
 
 def get_char_mapping(ciphertext_stats):
     """return a map of probable vowels"""
@@ -166,32 +177,26 @@ def stress_test_identify_space_char(texts):
 
 
 
-def calc_identify_space_char_error_rate(texts, low, high, step, n = 1):
+def calc_identify_space_char_error_rate(texts, low, high, step, tries):
     print(f"Get_Space_Key_Value Stress Test")
-    print(f"Num Errors, 100 tests at each p value from {low} to {high} in steps of size {step} for top {n} space candidates\n")
+    print(f"Num Errors, {tries} tests at each p value from {low} to {high} in steps of size {step}\n")
     seed = 0
     errors = {} #k = p, v = error count out of 100
     for i in range(low, high+1, step):
         prob = i / 100
         errors[prob] = 0
-        for i in range(100):
+        for i in range(tries):
             text = texts[random.randint(0, len(texts)-1)]
             encrypted_text = encrypt.encrypt(text, encrypt.BLANK_KEY, probability=prob, seed = seed)
-            space = get_top_n_space_key_value(encrypted_text, n)
+            space = get_space_key_value(encrypted_text)
             if " " not in space:
                 errors[prob] += 1
+                #print(f"\n\nERROR -- space is '{space}'")
+
             seed += 1
-        print((f"p: {prob:.2f}\tnum errors: {errors[prob]:2} out of 100"))
+        print((f"p: {prob:.2f}\tnum errors: {errors[prob]:2} out of {tries}"))
     return errors
 
-
-def stress_test_char_mapping(texts):
-    """
-    Used to test decryption assumptions
-    Input: a list of 500 character texts
-    Output: Prints out at what probability the assert statements fail
-    """
-    pass
 
 def process_fingerprint(texts, char):
     """
@@ -301,12 +306,6 @@ def index_positions_of_last_char(text):
     return index_positions_of_char(text, target_char)
 
 
-def print_errors(errors):
-    print("Errors, 100 tests at each p value")
-    for k,v in errors.items():
-        print(f"p: {k:.2f}\tnum errors: {v} out of 100")
-
-
 
 def main():
     """
@@ -323,20 +322,20 @@ def main():
     """
 
 
-    plaintexts_dict_1 = preprocess.read_all_lines("../dictionaries/official_dictionary_1_cleaned.txt")
-    plaintexts_dict_2 = preprocess.read_all_lines("../dictionaries/official_dictionary_2_cleaned.txt")
+    plaintexts_dict_1 = dictionary.get_dictionary_1()
+    calc_identify_space_char_error_rate(plaintexts_dict_1, low= 0, high = 25, step =1, tries = 1000)
 
-    plaintexts = plaintexts_dict_1 + [" ".join(plaintexts_dict_2)]
+    #test = "wphsfnzwlxuvolbfnlbgu bcfgquawabanwmbgfanfiutlwt xsfgnbguawatlwnognbpouiqx wwqueflo whiolkutfvfabdozuylbvfzbavuohlwtofauifiibolufanbtfinbunfssx wuefljolutwlnfysoiuiossbavuig otjbavufjblfnouksfaqolut wnwioaibnbdolujhsnbivnfvouhnbsoutflfsxdoiubsazomoluyfgqloinirunfljfguzwsoiuixbt waozugfifpfiujhzisbavbavuawapolyfswueoopbsuflybnlfsutfbanozupoitolnbaoutsombvsfiiunfaqoluiofewln baoiiuohalbagnoloinozufafn ojfnbdbaxvugwazhgoiunolyebhjiue oosyfllweuqffyfsfiuinfvafnblwauylbiqoniugwhanolgswgqebiou oflnf ibzoiuithlbwhisxui"
+    #test_out = get_space_key_value(test)
 
-    for entry in plaintexts_dict_1:
-        print(len(entry))
+    #print(f"test_out {test_out}")
 
-    #print(diff_extraction_strategy(plaintexts[0]))
+    #plaintexts_dict_2 = dictionary.get_dictionary_2()
+
+    #plaintexts = plaintexts_dict_1 + [" ".join(plaintexts_dict_2)]
 
 
-    #calc_identify_space_char_error_rate(plaintexts_dict_1,0, 90, 1, n=3)
-    #broke_at = stress_test_identify_space_char(plaintexts_dict_1)
-    #print(f"Space broke at {broke_at}")
+
 
 
 if __name__ == "__main__":
