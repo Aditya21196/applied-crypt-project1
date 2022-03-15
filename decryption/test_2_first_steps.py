@@ -5,6 +5,7 @@ sys.path.insert(0, "../dictionaries")
 import encrypt, alphabet, random, accuracy, frequency, decrypt
 from test2_generate_plaintext import get_plaintext
 from find_similar_words import get_longest_common_subsequence
+from datetime import datetime
 
 with open("../dictionaries/official_dictionary_1_cleaned.txt", "r") as f:
     PLAIN_TEXTS = [line.rstrip() for line in f]
@@ -175,6 +176,9 @@ def find_test2_accuracy(mapping, plaintext, ciphertext, dictionary):
 def stress_test(rand_p, dictionary, round_cnt):
     all_acc = []
     for i in range(round_cnt):
+        start_t = datetime.now().strftime("%H:%M:%S")
+        print("Round #" + str(i + 1) + 
+                " is starting. Current time: " + start_t)
         keys = encrypt.generate_key_mapping()
         t2_plain = get_plaintext()
         t2_cipher = encrypt.encrypt(t2_plain, keys, rand_p)
@@ -186,7 +190,8 @@ def stress_test(rand_p, dictionary, round_cnt):
         all_acc.append(acc)
         
         completion = (i + 1) / round_cnt * 100
-        print(str(completion) + "% completed")
+        end_t = datetime.now().strftime("%H:%M:%S")
+        print(str(completion) + "% completed. Current time: " + end_t)
         
     res = []
     res.append("Random character probability: " + str(rand_p))
@@ -199,11 +204,16 @@ def stress_test(rand_p, dictionary, round_cnt):
     return res
 
 if __name__ == "__main__":
-    p = 0.1
+    p = 0.5
     out = []
     while p < 1:
-        res = stress_test(p, dictionary, 3)
+        #t1 = datetime.now().strftime("%H:%M:%S")
+        #print("Test is starting. Current time: " + t1)
+        res = stress_test(p, dictionary, 10)
         print(res)
+
+        #t2 = datetime.now().strftime("%H:%M:%S")
+        #print("Test ended. Current time: " + t2)
         for s in res:
             out.append(s + "\n")
         p += 0.1
