@@ -187,12 +187,27 @@ def stress_test(rand_p, dictionary, round_cnt):
         
         completion = (i + 1) / round_cnt * 100
         print(str(completion) + "% completed")
-    
-    print("Random character probability: " + str(rand_p))
-    print("Rounds completed: " + str(round_cnt))
-    print("Lowest accuracy: " + str(min(all_acc)))
-    print("Highest accuracy: " + str(max(all_acc)))
+        
+    res = []
+    res.append("Random character probability: " + str(rand_p))
+    res.append("Rounds completed: " + str(round_cnt))
+    res.append("Lowest accuracy: " + str(min(all_acc)))
+    res.append("Highest accuracy: " + str(max(all_acc)))
     avg_acc = sum(all_acc) / len(all_acc)
-    print("Average accuracy: " + str(avg_acc))
+    res.append("Average accuracy: " + str(avg_acc))
     
-stress_test(0.3, dictionary, 50)
+    return res
+
+if __name__ == "__main__":
+    p = 0.1
+    out = []
+    while p < 1:
+        res = stress_test(p, dictionary, 3)
+        print(res)
+        for s in res:
+            out.append(s + "\n")
+        p += 0.1
+
+    with open("t2_scheme_stress_test_result.txt", "w") as f:
+        for s in out:
+            f.write(s)
