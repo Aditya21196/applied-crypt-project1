@@ -323,7 +323,7 @@ def main():
 
 
     plaintexts_dict_1 = dictionary.get_dictionary_1()
-    calc_identify_space_char_error_rate(plaintexts_dict_1, low= 0, high = 25, step =1, tries = 1000)
+    calc_identify_space_char_error_rate(plaintexts_dict_1, low= 40, high = 80, step =1, tries = 1000)
 
     #test = "wphsfnzwlxuvolbfnlbgu bcfgquawabanwmbgfanfiutlwt xsfgnbguawatlwnognbpouiqx wwqueflo whiolkutfvfabdozuylbvfzbavuohlwtofauifiibolufanbtfinbunfssx wuefljolutwlnfysoiuiossbavuig otjbavufjblfnouksfaqolut wnwioaibnbdolujhsnbivnfvouhnbsoutflfsxdoiubsazomoluyfgqloinirunfljfguzwsoiuixbt waozugfifpfiujhzisbavbavuawapolyfswueoopbsuflybnlfsutfbanozupoitolnbaoutsombvsfiiunfaqoluiofewln baoiiuohalbagnoloinozufafn ojfnbdbaxvugwazhgoiunolyebhjiue oosyfllweuqffyfsfiuinfvafnblwauylbiqoniugwhanolgswgqebiou oflnf ibzoiuithlbwhisxui"
     #test_out = get_space_key_value(test)
