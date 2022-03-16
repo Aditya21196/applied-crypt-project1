@@ -87,6 +87,12 @@ def remove_double_duplicate(target_char, ciphertext):
         processed_text += char
     return processed_text
 
+def p_estimate(ciphertext):
+    """
+    returns an estimate (p-hat) for the p used to encrypt the ciphertext
+    """
+    return round(1 - (500/len(ciphertext)), 2)
+
 
 def main():
     """
