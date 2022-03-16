@@ -18,6 +18,13 @@ _dict_2_char_frequency_mapping_million = [' ', 'e', 'r', 'a', 's', 'l', 'i', 't'
 _dict_2_missing = ['x', 'q', 'j']
 
 
+def preprocess_dictionary_2():
+    """
+    prepprocess dict 2 for the attack
+    """
+
+
+
 def make_key_mapping(space, sample_freq, population_freq):
     """
     Makes best initial key mapping
@@ -57,7 +64,7 @@ def swap_random_pair(key):
     return key
 
 
-def dict_2_attack(ciphertext):
+def dict_2_attack_v1(ciphertext):
     cleaned_ciphertext = preprocess.remove_duplicate_char_triplets(ciphertext)
     space = decrypt.get_space_key_value(cleaned_ciphertext)
     cleaned_ciphertext = preprocess.remove_double_duplicate(space, cleaned_ciphertext)
@@ -73,7 +80,7 @@ def dict_2_attack(ciphertext):
         print(f"key_guess {key_guess}")
 
     count = 0
-    while True and count < 1000000:
+    while True and count < 10000:
         key_guess = swap_random_pair(key_guess)
         print(key_guess)
         print(decrypt.decrypt(cleaned_ciphertext, key_guess))
@@ -93,7 +100,7 @@ def main():
     ciphertext = encrypt.encrypt(plaintext, key, probability=0.0)
     #print(f"ciphertext: \n'{ciphertext}'\n")
 
-    print(dict_2_attack(ciphertext))
+    print(dict_2_attack_v1(ciphertext))
 
 if __name__ == "__main__":
     main()
