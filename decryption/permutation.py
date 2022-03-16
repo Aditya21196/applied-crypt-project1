@@ -3,6 +3,7 @@ A permutation testing framework
 """
 import sys
 
+_dict_2_avg_key = []
 
 def gen_all_permutation_keys(key_space):
     """
