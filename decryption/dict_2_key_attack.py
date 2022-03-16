@@ -21,8 +21,35 @@ _dict_2_missing = ['x', 'q', 'j']
 def preprocess_dictionary_2():
     """
     prepprocess dict 2 for the attack
+    returns a dict (k:v) where the key is word length
+                value is a list of (words, unique_chars) tuple
     """
+    words = dictionary.get_dictionary_2()
+    words.sort(key = lambda x: len(x))
+    by_length = []
+    current_length = len(words[0])
+    current = []
+    for i, w in enumerate(words):
+        if len(w) == current_length:
+            current.append((w, num_unique_chars(w)))
+        else:
+            by_length.append(current)
+            current = []
+            current_length = len(w)
+            current.append((w, num_unique_chars(w)))
 
+    length_dict = {len(w[0][0]):w for w in by_length}
+
+
+    print(by_length)
+    return length_dict
+
+
+def num_unique_chars(a_word):
+    """
+    returns how many unique chars are in a word
+    """
+    return len(set(a_word))
 
 
 def make_key_mapping(space, sample_freq, population_freq):
@@ -91,16 +118,61 @@ def dict_2_attack_v1(ciphertext):
     return decrypt.decrypt(cleaned_ciphertext, key_guess)
 
 
+def build_mapping_from_cipher_words(a_list):
+    unknown_chars = set(alphabet.get_alphabet())
+    unknown_chars.remove(" ")
+    for entry in _dict_2_missing:
+        unknown_chars.remove(entry)
+
+    print(f"unknown chars {unknown_chars}")
+
+    a_list.sort(key = lambda x: len(x))
+
+    for entry in a_list:
+        print(entry)
+
+    dict_words = preprocess_dictionary_2()
+
+    for k, v in dict_words.items():
+        print(f"{k} : {v}")
+
+
+
+
+
+
+
+def dict_2_attack_v2(ciphertext):
+    cleaned_ciphertext = preprocess.remove_duplicate_char_triplets(ciphertext)
+    space = decrypt.get_space_key_value(cleaned_ciphertext)
+    print(f"space {space}")
+    cleaned_ciphertext = preprocess.remove_double_duplicate(space, cleaned_ciphertext)
+    print(f"cleaned_ciphertext {len(cleaned_ciphertext)}\n'{cleaned_ciphertext}'")
+
+    cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
+    key_guess = build_mapping_from_cipher_words(cipher_words)
+
+    print(cipher_words)
+
+
+    #return decrypt.decrypt(cleaned_ciphertext, key_guess)
+
+
 def main():
+    #print(preprocess_dictionary_2())
+
+
     plaintext = dictionary.make_random_dictionary_2_plaintext()
     print(f"plaintext {len(plaintext)} chars \n'{plaintext}'\n")
 
     key = encrypt.generate_key_mapping()
     print(f"key: {key}")
-    ciphertext = encrypt.encrypt(plaintext, key, probability=0.0)
-    #print(f"ciphertext: \n'{ciphertext}'\n")
 
-    print(dict_2_attack_v1(ciphertext))
+    ciphertext = encrypt.encrypt(plaintext, key, probability=0)
+    print(f"ciphertext: \n'{ciphertext}'\n")
+
+    print(dict_2_attack_v2(ciphertext))
+
 
 if __name__ == "__main__":
     main()
