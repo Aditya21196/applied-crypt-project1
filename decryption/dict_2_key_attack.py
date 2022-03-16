@@ -12,6 +12,7 @@ import encrypt
 import decrypt
 import random
 
+UNKNOWN_CHAR = "#"
 
 _dict_2_char_frequency_mapping_million = [' ', 'e', 'r', 'a', 's', 'l', 'i', 't', 'o', 'n', 'c', 'u', 'g', 'f', 'd', 'p', 'b', 'k', 'h', 'y', 'v', 'z', 'w', 'm', 'j', 'q', 'x']
 
@@ -121,8 +122,7 @@ def build_mapping_from_cipher_words(cipher_words, space):
     """
     builds a key mapping by compairing dict letter frequencies
     """
-    key = [-1 for i in range(alphabet.get_size())]
-    key[0] = alphabet.get_int_from_char(space)
+    key =  {space:" "}
 
     unknown_chars = set(alphabet.get_alphabet())
     unknown_chars.remove(" ")
@@ -131,17 +131,47 @@ def build_mapping_from_cipher_words(cipher_words, space):
         unknown_chars.remove(entry)
 
     dict_words = preprocess_dictionary_2()
+    possible_plaintext_words = []
 
     for word in cipher_words:
-        possible_plaintext_words = get_dict_2_word_options(word, dict_words)
-        print(f"{word} -> {possible_plaintext_words}")
+        possible_plaintext_words.append(get_dict_2_word_options(word, dict_words))
+
+    for cipher_word, plaintext_possibilities in zip(cipher_words, possible_plaintext_words):
+        if len(plaintext_possibilities) == 1:
+            #print(f"cipher_word {cipher_word} plaintext_possibilities {plaintext_possibilities}")
+            for p_char, c_char in zip(plaintext_possibilities[0], cipher_word):
+                #print(f"p_char {p_char} c_char {c_char}")
+                if p_char in unknown_chars:
+                    key[c_char] = p_char
+                    unknown_chars.remove(p_char)
+
+    print()
+
+    for i, cipher_word in enumerate(cipher_words):
+        word = partial_decrypt(cipher_word, key)
+        if UNKNOWN_CHAR in word:
+            idx_of_unknown = word.find(UNKNOWN_CHAR)
+            suffix = word[:idx_of_unknown]
+            match_candidates = []
+            for entry in possible_plaintext_words[i]:
+                if suffix == entry[:idx_of_unknown]:
+                    match_candidates.append(entry)
+            if len(match_candidates) == 1:
+                for p_char, c_char in zip(match_candidates[0], cipher_word):
+                    #print(f"p_char {p_char} c_char {c_char}")
+                    if p_char in unknown_chars:
+                        key[c_char] = p_char
+                        unknown_chars.remove(p_char)
 
 
 
-    #print(f"cipher_words {cipher_words}\n")
-    #print(f"dict_words {dict_words}\n")
-    #print(f"key {key}\n")
-    #print(f"unknown chars {unknown_chars}")
+
+    word = partial_decrypt(cipher_word, key)
+    final = space.join(cipher_words)
+
+    return partial_decrypt(final, key)
+
+
 
 
 def get_dict_2_word_options(a_word, dict_words):
@@ -160,52 +190,33 @@ def get_dict_2_word_options(a_word, dict_words):
 
 
 
-'''
 def partial_decrypt(ciphertext, key):
     """
-    Map the ciphertext to plaintext using the key
+    Map the ciphertext to plaintext using a key map dictionary
     """
-    inverted_key = build_partial_inverted_key(key)
-    print(f"inverted_key {inverted_key}")
-    plaintext = ""
+    plain = ""
     for char in ciphertext:
-        print(f"char: {char}")
-        plaintext += inverted_key[char]
-    return plaintext
-
-
-def build_partial_inverted_key(key):
-    """
-    k, v    k is ciphercharacter
-            v is plaintext character
-            if [] is -1, return *
-    """
-    key_map = {}
-    for i, entry in enumerate(key):
-        if entry == -1:
-            char = "*"
+        if char not in key:
+            plain += UNKNOWN_CHAR
         else:
-            char = alphabet.get_char_from_int(entry)
-        key_map[alphabet.get_char_from_int(i)] = char
-    return key_map
-'''
+            plain += key[char]
+    return plain
 
 
 
 def dict_2_attack_v2(ciphertext):
+    """
+    dict_2_attack_v2
+    """
     cleaned_ciphertext = preprocess.remove_duplicate_char_triplets(ciphertext)
     space = decrypt.get_space_key_value(cleaned_ciphertext)
-    print(f"space {space}")
+    #print(f"space {space}")
     cleaned_ciphertext = preprocess.remove_double_duplicate(space, cleaned_ciphertext)
-    print(f"cleaned_ciphertext {len(cleaned_ciphertext)}\n'{cleaned_ciphertext}'")
+    #print(f"cleaned_ciphertext {len(cleaned_ciphertext)}\n'{cleaned_ciphertext}'")
 
     cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
     text_guess = build_mapping_from_cipher_words(cipher_words, space)
-
-    #print(cipher_words)
-
-
-    #return decrypt.decrypt(cleaned_ciphertext, key_guess)
+    return text_guess
 
 
 def main():
@@ -213,16 +224,18 @@ def main():
 
 
     plaintext = dictionary.make_random_dictionary_2_plaintext()
-    print(f"plaintext {len(plaintext)} chars \n'{plaintext}'\n")
+    print(f"\nplaintext {len(plaintext)} chars \n'{plaintext}'\n")
 
     key = encrypt.generate_key_mapping()
-    print(f"key: {key}")
+    #print(f"key: {key}")
 
-    ciphertext = encrypt.encrypt(plaintext, key, probability=0)
+    ciphertext = encrypt.encrypt(plaintext, key, probability=0.00)
     print(f"ciphertext: \n'{ciphertext}'\n")
 
-    print(dict_2_attack_v2(ciphertext))
+    plaintext = dict_2_attack_v2(ciphertext)
+    print(f"plaintext len{len(plaintext)}: \n'{plaintext}'")
 
+    print(f"Bad character present {plaintext.find(UNKNOWN_CHAR)}")
 
 if __name__ == "__main__":
     main()
