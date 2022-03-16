@@ -37,11 +37,10 @@ def preprocess_dictionary_2():
             current = []
             current_length = len(w)
             current.append((w, num_unique_chars(w)))
-
+    if len(current) > 0:
+        by_length.append(current)
     length_dict = {len(w[0][0]):w for w in by_length}
 
-
-    print(by_length)
     return length_dict
 
 
@@ -118,27 +117,78 @@ def dict_2_attack_v1(ciphertext):
     return decrypt.decrypt(cleaned_ciphertext, key_guess)
 
 
-def build_mapping_from_cipher_words(a_list):
+def build_mapping_from_cipher_words(cipher_words, space):
+    """
+    builds a key mapping by compairing dict letter frequencies
+    """
+    key = [-1 for i in range(alphabet.get_size())]
+    key[0] = alphabet.get_int_from_char(space)
+
     unknown_chars = set(alphabet.get_alphabet())
     unknown_chars.remove(" ")
+
     for entry in _dict_2_missing:
         unknown_chars.remove(entry)
 
-    print(f"unknown chars {unknown_chars}")
-
-    a_list.sort(key = lambda x: len(x))
-
-    for entry in a_list:
-        print(entry)
-
     dict_words = preprocess_dictionary_2()
 
-    for k, v in dict_words.items():
-        print(f"{k} : {v}")
+    for word in cipher_words:
+        possible_plaintext_words = get_dict_2_word_options(word, dict_words)
+        print(f"{word} -> {possible_plaintext_words}")
+
+
+
+    #print(f"cipher_words {cipher_words}\n")
+    #print(f"dict_words {dict_words}\n")
+    #print(f"key {key}\n")
+    #print(f"unknown chars {unknown_chars}")
+
+
+def get_dict_2_word_options(a_word, dict_words):
+    """
+    returns all the possible options the word could be
+    """
+    word_len = len(a_word)
+    num_unique = num_unique_chars(a_word)
+    possible_words = []
+    if word_len in dict_words:
+        for entry in dict_words[word_len]:
+            if entry[1] == num_unique:
+                possible_words.append(entry[0])
+    return possible_words
 
 
 
 
+'''
+def partial_decrypt(ciphertext, key):
+    """
+    Map the ciphertext to plaintext using the key
+    """
+    inverted_key = build_partial_inverted_key(key)
+    print(f"inverted_key {inverted_key}")
+    plaintext = ""
+    for char in ciphertext:
+        print(f"char: {char}")
+        plaintext += inverted_key[char]
+    return plaintext
+
+
+def build_partial_inverted_key(key):
+    """
+    k, v    k is ciphercharacter
+            v is plaintext character
+            if [] is -1, return *
+    """
+    key_map = {}
+    for i, entry in enumerate(key):
+        if entry == -1:
+            char = "*"
+        else:
+            char = alphabet.get_char_from_int(entry)
+        key_map[alphabet.get_char_from_int(i)] = char
+    return key_map
+'''
 
 
 
@@ -150,9 +200,9 @@ def dict_2_attack_v2(ciphertext):
     print(f"cleaned_ciphertext {len(cleaned_ciphertext)}\n'{cleaned_ciphertext}'")
 
     cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
-    key_guess = build_mapping_from_cipher_words(cipher_words)
+    text_guess = build_mapping_from_cipher_words(cipher_words, space)
 
-    print(cipher_words)
+    #print(cipher_words)
 
 
     #return decrypt.decrypt(cleaned_ciphertext, key_guess)

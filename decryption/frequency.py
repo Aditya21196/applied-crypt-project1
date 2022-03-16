@@ -183,6 +183,14 @@ def report_stats(a_string, delimiter = ' '):
         else:
             print(f"\n{key} : {entry}")
 
+def get_ordered_list_of_char_frequencies(text):
+    """
+    Returns a list of characters sorted by frequency, descending order
+    """
+    char_frequency = n_gram_freq(text, 1)
+    candidates = [(k,v) for k,v in char_frequency.items()]
+    candidates.sort(key=lambda x: x[1], reverse=True)
+    return [k for (k,_) in candidates]
 
 
 

@@ -60,56 +60,6 @@ def get_space_key_value(ciphertext):
     word_stats.sort(key = lambda x: x['stdev'])
     return word_stats[0]['delimiter']
 
-'''
-def get_top_n_space_key_value(ciphertext, n):
-    """
-    #returns the space key value for the ciphertext
-
-    """
-    word_stats = []
-
-    for char in (alphabet.get_alphabet()):
-        try:
-            word_stats.append(frequency.get_word_frequency_statistics(ciphertext, delimiter = char))
-        except KeyError:
-            pass
-
-    word_stats.sort(key = lambda x: x['stdev'])
-    top_n = word_stats[:n]
-    print()
-    for entry in top_n:
-        print(entry['monogram_frequency'])
-    print()
-    return [x['delimiter'] for x in top_n]
-'''
-
-def get_char_mapping(ciphertext_stats):
-    """return a map of probable vowels"""
-    known_chars = {}
-    letters = []
-    for char in alphabet.get_alphabet():
-        if char == ciphertext_stats["delimiter"]:
-            continue
-        char_dict = {"char":char
-                        , "monogram":ciphertext_stats["monogram_frequency"][char]
-                        , "bigram":ciphertext_stats["bigram_frequency"][char] }
-        letters.append(char_dict)
-
-    # identify e
-    letters.sort(key = lambda x: x["monogram"], reverse=True)
-    known_chars["e"] = letters[0]["char"]
-    del letters[0]
-
-    # identify s
-    letters.sort(key = lambda x: x["bigram"]["after"][' '], reverse=True)
-    known_chars["s"] = letters[0]["char"]
-    del letters[0]
-
-    # itentify vowels
-    letters.sort(key = lambda x: x["bigram"]["unique_char_total"], reverse=True)
-
-
-    return known_chars
 
 
 def decrypt(ciphertext, key):
@@ -118,6 +68,7 @@ def decrypt(ciphertext, key):
     """
     inverted_key = {alphabet.get_char_from_int(v) : alphabet.get_char_from_int(k) \
                             for k,v in enumerate(key)}
+    #print(f"inverted_key {inverted_key}")
     plaintext = ""
     for char in ciphertext:
         plaintext += inverted_key[char]
