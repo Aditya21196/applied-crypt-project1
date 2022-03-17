@@ -3,6 +3,7 @@ The main module for decryption
 """
 import frequency
 
+
 def get_user_text():
     """
     Gets info from stdin
@@ -11,17 +12,19 @@ def get_user_text():
     valid_text = False
 
     while not valid_text:
-        u_text = input("Enter the ciphertext: ")
+        u_text = input("\nEnter the ciphertext: ")
         if len(u_text) > 0:
             valid_text = True
 
     return u_text
 
-def p_estimate(ciphertext):
+
+def output_guess(plaintext):
     """
-    returns an estimate (p-hat) for the p used to encrypt the ciphertext
+    Outputs plaintext guess to stdout
     """
-    return round(1 - (500/len(ciphertext)), 2)
+    print(f"\nMy plaintext guess is: {plaintext}\n")
+
 
 def main():
     """
@@ -30,11 +33,11 @@ def main():
     user_text = get_user_text()
     print(f"\nTHE USER TEXT IS :'{user_text}'")
 
-    p_hat = p_estimate(user_text)
-    print(f"p_hat is {p_hat:}%")
+    text_mono_frequency = frequency.n_gram_freq(user_text, 1)
+    print(f"text_mono_frequency {text_mono_frequency}")
 
-    text_mono_frequency = frequency.monogram_frequency(user_text)
-    frequency.print_frequency(text_mono_frequency)
+    output_guess(user_text)
+
 
 if __name__ == "__main__":
     main()
