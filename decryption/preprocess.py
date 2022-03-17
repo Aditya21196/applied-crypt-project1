@@ -29,20 +29,6 @@ def process_plaintext_dictionaries(a_list):
     return stats
 
 
-def recursively_print_dict(u_dict, num_tabs = 0):
-    """
-    Recursively prints an object of objects
-    """
-    for key, value in u_dict.items():
-        print()
-        if isinstance(value, dict):
-            print("\t" * num_tabs + f"{key}")
-            recursively_print_dict(value, num_tabs=num_tabs+1)
-
-        else:
-            print("\t" * num_tabs + f"{key} : {value}")
-
-
 def make_words_in_texts_index(texts, delimiter=" "):
     """
     Returns a dictionary
@@ -93,6 +79,10 @@ def p_estimate(ciphertext):
     returns an estimate (p-hat) for the p used to encrypt the ciphertext
     """
     return round(1 - (500/len(ciphertext)), 2)
+
+
+
+
 
 
 
