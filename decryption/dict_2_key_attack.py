@@ -145,23 +145,50 @@ def build_mapping_from_cipher_words(cipher_words, space):
                     key[c_char] = p_char
                     unknown_chars.remove(p_char)
 
-    print()
+    cipher_words_copy = cipher_words[:]
 
-    for i, cipher_word in enumerate(cipher_words):
-        word = partial_decrypt(cipher_word, key)
-        if UNKNOWN_CHAR in word:
-            idx_of_unknown = word.find(UNKNOWN_CHAR)
-            suffix = word[:idx_of_unknown]
-            match_candidates = []
-            for entry in possible_plaintext_words[i]:
-                if suffix == entry[:idx_of_unknown]:
-                    match_candidates.append(entry)
-            if len(match_candidates) == 1:
-                for p_char, c_char in zip(match_candidates[0], cipher_word):
-                    #print(f"p_char {p_char} c_char {c_char}")
-                    if p_char in unknown_chars:
-                        key[c_char] = p_char
-                        unknown_chars.remove(p_char)
+    # first pass
+    for i in range(1):
+        #print(f"\ncipher_words\n")
+
+        #for word in cipher_words:
+        #    print(partial_decrypt(word, key))
+
+        for i, cipher_word in enumerate(cipher_words):
+            word = partial_decrypt(cipher_word, key)
+            if UNKNOWN_CHAR in word:
+                idx_of_unknown = word.find(UNKNOWN_CHAR)
+                suffix = word[:idx_of_unknown]
+                match_candidates = []
+                for entry in possible_plaintext_words[i]:
+                    if suffix == entry[:idx_of_unknown]:
+                        match_candidates.append(entry)
+
+                if len(match_candidates) == 1:
+                    for p_char, c_char in zip(match_candidates[0], cipher_word):
+                        if p_char in unknown_chars:
+                            key[c_char] = p_char
+                            unknown_chars.remove(p_char)
+
+
+    # repeat pass to fill in missing
+    for i in range(2):
+        for i, cipher_word in enumerate(cipher_words):
+            word = partial_decrypt(cipher_word, key)
+            if UNKNOWN_CHAR in word:
+                unknown_count = word.count(UNKNOWN_CHAR)
+                first_unknown_idx = word.find(UNKNOWN_CHAR)
+                if first_unknown_idx == 0:
+                    #truncate word
+                    pass
+                else:
+                    #look at front of word
+                    pass
+
+                # a good way to do this recursively?
+                print(f"unknown_count {unknown_count}")
+                print(f"first_unknown_idx = {first_unknown_idx}")
+                print(word)
 
 
 
@@ -223,7 +250,8 @@ def main():
     #print(preprocess_dictionary_2())
 
 
-    plaintext = dictionary.make_random_dictionary_2_plaintext()
+    #plaintext = dictionary.make_random_dictionary_2_plaintext()
+    plaintext = "stuffer outflanked farcer blistered rotates gladding tortoni hyped particulate protectional rankness brickyard particulate invalided particulate imagist twirlier frizzlers favouring lingua pilfers stuffer unlikely imagist alefs baldpates clarence farcer imagist stuffer tortoni overachiever brickyard stuffer rotates outdates invalided freaking amulets protectional rankness moonset outdates glottic rotates amulets outdates amulets frizzlers smeltery baldpates glottic gladding alefs moonset protect"
     print(f"\nplaintext {len(plaintext)} chars \n'{plaintext}'\n")
 
     key = encrypt.generate_key_mapping()
