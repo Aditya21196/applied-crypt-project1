@@ -3,6 +3,7 @@ includes all preprocessed information required.
 For now: caclculate each time. Later: just load from a pickle file
 '''
 import frequency
+import math
 
 
 def read_all_lines(file_name):
@@ -88,15 +89,52 @@ def num_unique_chars(text):
     return len(set(text))
 
 
+def get_all_char_idx(text):
+    """
+    returns a dictionary
+        key = char
+        val = list of all idx positions of the char in the text
+    """
+    import alphabet
+    char_idx_dict = {char:[] for char in alphabet.get_alphabet()}
+
+    for i, char in enumerate(text):
+        char_idx_dict[char].append(i)
+
+    missing = [k for (k,v) in char_idx_dict.items() if len(v) == 0]
+    char_idx_dict["missing"] = missing
+    char_idx_dict["num_unique"] = alphabet.get_size() - len(missing)
+
+    return char_idx_dict
 
 
+def scale_nums(int_list, alpha):
+    """
+    Takes in a list of integers
+    Outputs a scaled and floored list of integers
+    """
+    return [math.floor(num * alpha) for num in int_list]
 
 
+def test_scale_nums():
+    print(f"test scale nums starting")
+    start = [0, 1, 2, 3, 4, 5]
+    scaled = scale_nums(start, 1.9)
+
+    print(f"start: {start}")
+    print(f"scaled: {scaled}")
+
+    print(f"test scale nums ending\n\n")
 
 def main():
     """
     Main function when called form CLI
     """
+    test_scale_nums()
+
+
+
+
     plaintexts_dict_1 = read_all_lines("../dictionaries/official_dictionary_1_cleaned.txt")
     plaintexts_dict_2 = read_all_lines("../dictionaries/official_dictionary_2_cleaned.txt")
 
@@ -117,6 +155,9 @@ def main():
         print(words)
         print("\n" + "-" * 40 + "\n\n")
     """
+
+
+
 
 TEST_PLAIN_TEXTS = []
 with open('../dictionaries/official_dictionary_1_cleaned.txt','r') as f:
