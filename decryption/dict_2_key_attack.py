@@ -142,7 +142,7 @@ def build_mapping_from_cipher_words(cipher_words, space):
 
 
     # first pass
-    for i in range(1):
+    for i in range(2):
         #print(f"\ncipher_words\n")
 
         #for word in cipher_words:
@@ -166,27 +166,30 @@ def build_mapping_from_cipher_words(cipher_words, space):
 
     # repeat pass to fill in missing
     #print(f"possible plaintext words {possible_plaintext_words}")
-    for i in range(2):
+    for i in range(1):
         for i, cipher_word in enumerate(cipher_words):
             word = partial_decrypt(cipher_word, key)
             if UNKNOWN_CHAR in word:
                 unknown_count = word.count(UNKNOWN_CHAR)
-                #print(f"unknown_count {unknown_count}")
                 first_unknown_idx = word.find(UNKNOWN_CHAR)
                 match_candidates = []
-                if first_unknown_idx == 0 and unknown_count == 1:
+                if first_unknown_idx == 0:
                     truncated_word = word[1:]
-                    for entry in possible_plaintext_words[i]:
-                        if truncated_word == entry[1:]:
-                            #print(f"HERE - word = {entry}")
-                            match_candidates.append(entry)
-
-                elif first_unknown_idx > 0:
+                    if unknown_count == 1:
+                        for entry in possible_plaintext_words[i]:
+                            if truncated_word == entry[1:]:
+                                match_candidates.append(entry)
+                    else:  # unknown_count > 1
+                        next_unknown_idx = truncated_word.find(UNKNOWN_CHAR)
+                        more_truncated = truncated_word[:next_unknown_idx]
+                        for entry in possible_plaintext_words[i]:
+                            if more_truncated == entry[1:next_unknown_idx]:
+                                match_candidates.append(entry)
+                else:  #first char of word is known
                     truncated_word = word[:first_unknown_idx]
                     for entry in possible_plaintext_words[i]:
                         if len(entry) < first_unknown_idx:
                             if truncated_word == entry[:first_unknown_idx]:
-                                #print(f"HERE - word = {entry}")
                                 match_candidates.append(entry)
 
                 if len(match_candidates) == 1:
@@ -194,13 +197,6 @@ def build_mapping_from_cipher_words(cipher_words, space):
                         if p_char in unknown_chars:
                             key[c_char] = p_char
                             unknown_chars.remove(p_char)
-
-
-
-                else:
-                    #look at front of word
-                    pass
-
 
 
     word = partial_decrypt(cipher_word, key)
@@ -258,7 +254,7 @@ def dict_2_attack_v2(ciphertext):
 
 def test_dict_2_v2_attack(size, p=0):
     errors = []
-    seed = 0
+    seed = None
     for i in range(size):
         generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = seed)
         #print(f"generated plaintext:\n'{generated_plaintext}'")
@@ -278,18 +274,22 @@ def test_dict_2_v2_attack(size, p=0):
             print(f"Generated plaintext len {len(generated_plaintext)}\n'{generated_plaintext}'\n")
             print(f"Guesed plaintext len {len(generated_plaintext)}\n'{plaintext}'\n\n")
 
-        seed += 1
+        #seed += 1
 
     print(f"test_dict_2_v2_attack {len(errors)} errors out of {size} at p = {p}")
 
 
-
+def meta_test(low_p, high_p, size):
+    for i in range(low_p, high_p):
+        prob = i / 100
+        test_dict_2_v2_attack(size, p=prob)
 
 
 
 
 def main():
-    test_dict_2_v2_attack(1000, p=0)
+    #test_dict_2_v2_attack(100, p=.15)
+    meta_test(0, 5, 100)
 
 
 
