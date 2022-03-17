@@ -1,3 +1,7 @@
 flake8
 pylint
 numpy
+sklearn
+pandas
+torch
+scipy

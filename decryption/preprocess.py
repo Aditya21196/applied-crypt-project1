@@ -119,7 +119,7 @@ def main():
     """
 
 TEST_PLAIN_TEXTS = []
-with open('../dictionaries/plaintext_dictionary_1.txt','r') as f:
+with open('../dictionaries/official_dictionary_1_cleaned.txt','r') as f:
     content = f.readlines()
     for line in content:
         TEST_PLAIN_TEXTS.append(line.strip())
