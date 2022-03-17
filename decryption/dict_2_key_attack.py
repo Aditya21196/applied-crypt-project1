@@ -32,24 +32,17 @@ def preprocess_dictionary_2():
     current = []
     for i, w in enumerate(words):
         if len(w) == current_length:
-            current.append((w, num_unique_chars(w)))
+            current.append((w, preprocess.num_unique_chars(w)))
         else:
             by_length.append(current)
             current = []
             current_length = len(w)
-            current.append((w, num_unique_chars(w)))
+            current.append((w, preprocess.num_unique_chars(w)))
     if len(current) > 0:
         by_length.append(current)
     length_dict = {len(w[0][0]):w for w in by_length}
 
     return length_dict
-
-
-def num_unique_chars(a_word):
-    """
-    returns how many unique chars are in a word
-    """
-    return len(set(a_word))
 
 
 def make_key_mapping(space, sample_freq, population_freq):
@@ -206,7 +199,7 @@ def get_dict_2_word_options(a_word, dict_words):
     returns all the possible options the word could be
     """
     word_len = len(a_word)
-    num_unique = num_unique_chars(a_word)
+    num_unique = preprocess.num_unique_chars(a_word)
     possible_words = []
     if word_len in dict_words:
         for entry in dict_words[word_len]:

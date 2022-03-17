@@ -81,6 +81,12 @@ def p_estimate(ciphertext):
     return round(1 - (500/len(ciphertext)), 2)
 
 
+def num_unique_chars(text):
+    """
+    returns the number of unique characters in the text
+    """
+    return len(set(text))
+
 
 
 
