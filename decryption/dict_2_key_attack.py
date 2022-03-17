@@ -140,6 +140,7 @@ def build_mapping_from_cipher_words(cipher_words, space):
 
     cipher_words_copy = cipher_words[:]
 
+
     # first pass
     for i in range(1):
         #print(f"\ncipher_words\n")
@@ -163,26 +164,42 @@ def build_mapping_from_cipher_words(cipher_words, space):
                             key[c_char] = p_char
                             unknown_chars.remove(p_char)
 
-
     # repeat pass to fill in missing
+    #print(f"possible plaintext words {possible_plaintext_words}")
     for i in range(2):
         for i, cipher_word in enumerate(cipher_words):
             word = partial_decrypt(cipher_word, key)
             if UNKNOWN_CHAR in word:
                 unknown_count = word.count(UNKNOWN_CHAR)
+                #print(f"unknown_count {unknown_count}")
                 first_unknown_idx = word.find(UNKNOWN_CHAR)
-                if first_unknown_idx == 0:
-                    #truncate word
-                    pass
+                match_candidates = []
+                if first_unknown_idx == 0 and unknown_count == 1:
+                    truncated_word = word[1:]
+                    for entry in possible_plaintext_words[i]:
+                        if truncated_word == entry[1:]:
+                            #print(f"HERE - word = {entry}")
+                            match_candidates.append(entry)
+
+                elif first_unknown_idx > 0:
+                    truncated_word = word[:first_unknown_idx]
+                    for entry in possible_plaintext_words[i]:
+                        if len(entry) < first_unknown_idx:
+                            if truncated_word == entry[:first_unknown_idx]:
+                                #print(f"HERE - word = {entry}")
+                                match_candidates.append(entry)
+
+                if len(match_candidates) == 1:
+                    for p_char, c_char in zip(match_candidates[0], cipher_word):
+                        if p_char in unknown_chars:
+                            key[c_char] = p_char
+                            unknown_chars.remove(p_char)
+
+
+
                 else:
                     #look at front of word
                     pass
-
-                # a good way to do this recursively?
-                #print(f"unknown_count {unknown_count}")
-                #print(f"first_unknown_idx = {first_unknown_idx}")
-                #print(word)
-
 
 
 
@@ -239,8 +256,45 @@ def dict_2_attack_v2(ciphertext):
     return text_guess
 
 
+def test_dict_2_v2_attack(size, p=0):
+    errors = []
+    seed = 0
+    for i in range(size):
+        generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = seed)
+        #print(f"generated plaintext:\n'{generated_plaintext}'")
+
+        key = encrypt.generate_key_mapping()
+        #print(f"key: {key}")
+
+        ciphertext = encrypt.encrypt(generated_plaintext, key, probability=0.00)
+        #print(f"ciphertext: \n'{ciphertext}'\n")
+
+        plaintext = dict_2_attack_v2(ciphertext)
+        #print(f"plaintext len{len(plaintext)}: \n'{plaintext}'")
+
+        if generated_plaintext != plaintext:
+            errors.append(seed)
+            print(f"\n\nERROR CAUSED BY seed({seed})")
+            print(f"Generated plaintext len {len(generated_plaintext)}\n'{generated_plaintext}'\n")
+            print(f"Guesed plaintext len {len(generated_plaintext)}\n'{plaintext}'\n\n")
+
+        seed += 1
+
+    print(f"test_dict_2_v2_attack {len(errors)} errors out of {size} at p = {p}")
+
+
+
+
+
+
 
 def main():
+    test_dict_2_v2_attack(1000, p=0)
+
+
+
+
+    '''
     #print(preprocess_dictionary_2())
 
 
@@ -258,6 +312,7 @@ def main():
     print(f"plaintext len{len(plaintext)}: \n'{plaintext}'")
 
     print(f"Bad character present {plaintext.find(UNKNOWN_CHAR)}")
+    '''
 
 if __name__ == "__main__":
     main()

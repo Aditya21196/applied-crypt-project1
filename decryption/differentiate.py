@@ -64,7 +64,33 @@ def differentiate(ciphertext):
 
 
     # remove plaintext candidates based on space, and last char positioning
+    ciphertext_space_spacing = ciphertext_char_position_idxs[ciphertext_space_char]
+    ciphertext_last_char_spacing = ciphertext_char_position_idxs[ciphertext_last_char]
 
+    if DEBUG:
+        print(f"ciphertext_spacing {ciphertext_space_spacing}\n")
+        print(f"ciphertext_last_char_spacing {ciphertext_last_char_spacing}\n")
+
+    cand_itr = candidates[:]
+    scores = []
+    for idx in cand_itr:
+        candidate_space_spacing = preprocess.scale_nums(plaintext_char_idx_positions[idx][" "], alpha)
+        candidate_last_char_spacing = preprocess.scale_nums(plaintext_char_idx_positions[idx][last_char_and_first_idx[idx][0]], alpha)
+
+        space_score = score(candidate_space_spacing, ciphertext_space_spacing)
+        last_char_score = score(candidate_last_char_spacing, ciphertext_last_char_spacing)
+        scores.append((space_score, last_char_score))
+
+        if DEBUG:
+            print(f"Candidate text {idx}")
+            print(f"candidate_space_spacing {candidate_space_spacing}\n")
+            print(f"candidate_last_char_spacing {candidate_last_char_spacing}\n")
+            print(f"spce_score {space_score}")
+            print(f"last_char_score {last_char_score}")
+            print()
+
+    if DEBUG:
+        print(f"scores {scores}")
 
     # remove plaintext candidates based on front chars
 
@@ -92,7 +118,7 @@ def differentiate(ciphertext):
 
 
     if DEBUG:
-        print(candidates)
+        print(f"candidates: {candidates}")
 
 
 def score(reference_list, candidate_list):
@@ -100,7 +126,22 @@ def score(reference_list, candidate_list):
     input: two lists of integers
     returns a score of how close the candidate matches the reference
     """
+    score = 0
+    ref_dif = []
+    for i in range(1, len(reference_list)):
+        ref_dif.append(reference_list[i] - reference_list[i-1])
+    candidate_dif = []
+    for i in range(1, len(candidate_list)):
+        candidate_dif.append(candidate_list[i] - candidate_list[i-1])
 
+
+    if DEBUG:
+        print(f"\n\n\tIn Score funtion")
+        print(f"\tref_dif {ref_dif}")
+        print(f"\tcand_dif {candidate_dif}")
+        print(f"\texit score \n")
+
+    return score
 
 def test_score():
     pass
@@ -171,8 +212,8 @@ def test_get_all_char_idx():
 
 
 def main():
-    test_differentiate()
-    #test_differentiate_single(p = .1, text_1_id=4)
+    #test_differentiate()
+    test_differentiate_single(p = .30, text_1_id=0)
     #test_get_all_char_idx()
 
 
