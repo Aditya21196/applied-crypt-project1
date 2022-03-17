@@ -179,9 +179,9 @@ def build_mapping_from_cipher_words(cipher_words, space):
                     pass
 
                 # a good way to do this recursively?
-                print(f"unknown_count {unknown_count}")
-                print(f"first_unknown_idx = {first_unknown_idx}")
-                print(word)
+                #print(f"unknown_count {unknown_count}")
+                #print(f"first_unknown_idx = {first_unknown_idx}")
+                #print(word)
 
 
 
@@ -237,6 +237,7 @@ def dict_2_attack_v2(ciphertext):
     cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
     text_guess = build_mapping_from_cipher_words(cipher_words, space)
     return text_guess
+
 
 
 def main():
