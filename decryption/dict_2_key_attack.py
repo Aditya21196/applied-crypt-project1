@@ -262,7 +262,7 @@ def test_dict_2_v2_attack(size, p=0):
         key = encrypt.generate_key_mapping()
         #print(f"key: {key}")
 
-        ciphertext = encrypt.encrypt(generated_plaintext, key, probability=0.00)
+        ciphertext = encrypt.encrypt(generated_plaintext, key, probability=p)
         #print(f"ciphertext: \n'{ciphertext}'\n")
 
         plaintext = dict_2_attack_v2(ciphertext)
@@ -289,7 +289,7 @@ def meta_test(low_p, high_p, size):
 
 def main():
     #test_dict_2_v2_attack(100, p=.15)
-    meta_test(0, 5, 100)
+    meta_test(10, 11, 1)
 
 
 
