@@ -95,15 +95,6 @@ def p_estimate(ciphertext):
     return round(1 - (500/len(ciphertext)), 2)
 
 
-def get_last_char(text):
-    """
-    returns the last char in a text
-    """
-    last_char = ""
-    if len(text) > 0:
-        last_char = text[-1]
-    return last_char
-
 
 
 def main():
