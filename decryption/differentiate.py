@@ -6,6 +6,7 @@ DEBUG = True
 import dictionary
 import preprocess
 import encrypt
+import decrypt
 
 
 def differentiate(ciphertext):
@@ -14,26 +15,58 @@ def differentiate(ciphertext):
     ciphertext -> assume remove triple chars has already happened
     """
     p_hat = preprocess.p_estimate(ciphertext)
-
     if DEBUG:
         print(f"p_hat = {p_hat}")
 
     plaintexts = dictionary.get_dictionary_1()
     last_char_and_first_idx = [(text[-1], text.find(text[-1])) for text in plaintexts]
-    plaintext_front_chars = [ plaintexts[i][:idx] for i, (_, idx) in enumerate(last_char_and_first_idx)]
+    plaintext_front_chars_and_unique_num = [(plaintexts[i][:idx], preprocess.num_unique_chars(plaintexts[i][:idx])) for i, (_, idx) in enumerate(last_char_and_first_idx)]
+    if DEBUG:
+        print(last_char_and_first_idx)
+        print(plaintext_front_chars_and_unique_num)
 
-    p_hat = preprocess.p_estimate(ciphertext)
-    print(last_char_and_first_idx)
-    print(plaintext_front_chars)
+    ciphertext_last_char = ciphertext[-1]
+    ciphertext_space_char = decrypt.get_space_key_value(ciphertext)
+    ciphertext_front_chars = ciphertext[:ciphertext.find(ciphertext_last_char)] # will need to be fancified to accept p val
+    c_front_chars_num_unique = preprocess.num_unique_chars(ciphertext_front_chars)
+
+    if DEBUG:
+        print(f"ciphertext_last_char: '{ciphertext_last_char}'")
+        print(f"ciphertext space char: '{ciphertext_space_char}'")
+        print(f"ciphertext_front_chars: '{ciphertext_front_chars}'")
+        print(f"Number of unique chars in ciphertext_front_chars {c_front_chars_num_unique}")
+        print(f"\nciphertext\n{ciphertext}\n")
+
+
+
 
 
 def test_differentiate():
-    test_text = dictionary.get_dictionary_1()
-    text = test_text[0]
-    key = encrypt.generate_key_mapping()
-    ciphertext = encrypt.encrypt(text, key, probability = .10)
-    ciphertext_cleaned = preprocess.remove_duplicate_char_triplets(ciphertext)
-    differentiate(ciphertext_cleaned)
+    p = .10
+    print(f"Differentiate Test using p = {p}")
+
+    # test dict 1
+    dict_1_texts = dictionary.get_dictionary_1()
+    for i,_ in enumerate(dict_1_texts):
+        print(f"\n *** Dictionary 1 -> Text {i+1} *** \n")
+        text = dict_1_texts[i]
+        print(f"Dict 1 Plaintext\n'{text}'\n")
+        key = encrypt.generate_key_mapping()
+        ciphertext = encrypt.encrypt(text, key, probability = p)
+        ciphertext_cleaned = preprocess.remove_duplicate_char_triplets(ciphertext)
+        differentiate(ciphertext_cleaned)
+        print()
+
+    # text dict 2
+    for i in range(5):
+        print(f"\n *** Dictionary 2 -> Randomly Generated Text {i+1} *** \n")
+        generated_text = dictionary.make_random_dictionary_2_plaintext(i)
+        print(f"Generated Plaintext\n'{generated_text}'\n")
+        key = encrypt.generate_key_mapping()
+        ciphertext = encrypt.encrypt(generated_text, key, probability = p)
+        ciphertext_cleaned = preprocess.remove_duplicate_char_triplets(ciphertext)
+        differentiate(ciphertext_cleaned)
+        print()
 
 
 
