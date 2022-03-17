@@ -38,15 +38,15 @@ def differentiate(ciphertext):
         print(f"\nciphertext\n{ciphertext}\n")
 
 
-
-
-
 def test_differentiate():
     p = .10
     print(f"Differentiate Test using p = {p}")
 
+
     # test dict 1
     dict_1_texts = dictionary.get_dictionary_1()
+    dict_1_char_positions = [preprocess.get_all_char_idx(text) for text in dict_1_texts]
+
     for i,_ in enumerate(dict_1_texts):
         print(f"\n *** Dictionary 1 -> Text {i+1} *** \n")
         text = dict_1_texts[i]
@@ -70,8 +70,40 @@ def test_differentiate():
 
 
 
+def test_differentiate_single(p = 0, text_1_id = 0):
+    print(f"Differentiate Test using p = {p}")
+
+    dict_1_texts = dictionary.get_dictionary_1()
+    dict_1_char_positions = [preprocess.get_all_char_idx(text) for text in dict_1_texts]
+
+    text = dict_1_texts[text_1_id]
+
+    print(f"Dict 1 Plaintext\n'{text}'\n")
+    key = encrypt.generate_key_mapping()
+    ciphertext = encrypt.encrypt(text, key, probability = p)
+    ciphertext_cleaned = preprocess.remove_duplicate_char_triplets(ciphertext)
+    differentiate(ciphertext_cleaned)
+    print()
+
+
+
+
+
+def test_get_all_char_idx():
+    print("\nTest get_all_char_idx for Dict 1 Texts\n")
+    dict_1_texts = dictionary.get_dictionary_1()
+    dict_1_char_positions = [preprocess.get_all_char_idx(text) for text in dict_1_texts]
+
+    for text, idxs in zip(dict_1_texts, dict_1_char_positions):
+        print(f"\ttext\n'{text}'\n")
+        for entry in idxs.items():
+            print(f"\t{entry}")
+
+
 def main():
-    test_differentiate()
+    #test_differentiate()
+    test_differentiate_single(p = 0, text_1_id=3)
+    #test_get_all_char_idx()
 
 
 
