@@ -78,17 +78,14 @@ def key_mapping(key_map, cipher_word, plaintext_word):
 
 
 
-def build_mapping_from_cipher_words(cipher_words, space):
+def build_mapping_from_cipher_words(cipher_words, space, key):
     """
     builds a key mapping by compairing dict letter frequencies
+    INPUT: cipherwords is a list of words
+    SPACE: space char
+    KEY: dict to map c_text to p_text
+    OUTPUTS: a key
     """
-    key =  {space:SPACE}
-
-    unknown_chars = set(alphabet.get_alphabet())
-    unknown_chars.remove(SPACE)
-
-    for entry in _dict_2_plain_chars_missing:
-        unknown_chars.remove(entry)
 
     dict_words = preprocess_dictionary_2()
     possible_plaintext_words = []
@@ -104,8 +101,6 @@ def build_mapping_from_cipher_words(cipher_words, space):
                 print(f"\nkey - ln 149")
                 for entry in key.items():
                     print(f"\t{entry}")
-                print(f"uknown_chars {unknown_chars}")
-
                 print()
 
     if DEBUG:
@@ -184,9 +179,7 @@ def build_mapping_from_cipher_words(cipher_words, space):
             key = key_mapping(key, cipher_words[-1], restricted_candidates[0])
 
 
-    final = space.join(cipher_words)
-
-    return partial_decrypt(final, key)
+    return key
 
 
 
@@ -261,7 +254,7 @@ def dict_2_attack_v2(ciphertext):
     #print(f"cipher_words {cipher_words}")
 
     #ADD INITIAL KEY GENERATOR DICT HERE to pass onto different functions
-    key = {SPACE:space}
+    key = {space:SPACE}
 
     #processed_cipherwords = remove_stubs(cipher_words)
     #duplicate_words = find_and_clean_duplicates(processed_cipherwords)
@@ -269,9 +262,62 @@ def dict_2_attack_v2(ciphertext):
     #print(f"Processed cipher_words {processed_cipherwords}")
     # need to clean up cipherwords somehow - remove illegal spaces / remove extra chars
 
-    text_guess = build_mapping_from_cipher_words(cipher_words, space)
-    return text_guess
+    key = build_mapping_from_cipher_words(cipher_words, space, key)
 
+
+    if is_key_map_bad(cipher_words, key):
+        print("\n\n** MAP IS BAD ** \n\n")
+        # institute fix for bad mappings
+        key = recover_from_bad_key(cipher_words, key)
+
+    final = space.join(cipher_words)
+    return partial_decrypt(final, key)
+
+
+def recover_from_bad_key(cipherwords, key):
+    """
+    Assume the key is close and only a few mappings are wrong
+    """
+    dict_2 = dictionary.get_dictionary_2()
+    dict_words = preprocess_dictionary_2()
+    for cipherword in cipherwords:
+        word = partial_decrypt(cipherword, key)
+        if word not in dict_2:
+            candidates = get_dict_2_word_options(cipherword, dict_words)
+            print(f"candidates {candidates}")
+            restricted_candidates = remove_candidates_same_length(word, candidates)
+            print(f"restricted_candidates {len(restricted_candidates)} {restricted_candidates}")
+            if len(restricted_candidates) == 1:
+                print()
+                missing_idx = word.find(UNKNOWN_CHAR)
+                print(f"word {word} missing idx {missing_idx}")
+                p_char = restricted_candidates[0][missing_idx]
+                c_char = cipherword[missing_idx]
+                #delete char that currently maps to p_char
+
+                key[c_char] = p_char
+
+                print(f"p_char {p_char} c_char {c_char} current")
+                print(f"key : {key}")
+                print(f"mapped to key[c_char] {key[c_char]}")
+                print()
+
+
+    return key
+
+
+
+def is_key_map_bad(cipher_words, key):
+    """
+    input:  cipher_words : a list of ciphertexts
+            key: a dict of ciphertext plaintext char mappings
+    returns true if any of the chars in cipher_words maps to an UNKNOWN CHAR
+    """
+    for cipherword in cipher_words:
+        word = partial_decrypt(cipherword, key)
+        if UNKNOWN_CHAR in word:
+            return True
+    return False
 
 def find_and_clean_duplicates(cipherwords_list):
     """
@@ -355,7 +401,7 @@ def remove_candidates_same_length(cipherword, candidates):
 # TESTING
 def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
     errors = []
-    test_seed = 21093
+    test_seed = 22560
     for _ in range(size):
         generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = test_seed)
         #print(f"generated plaintext:\n'{generated_plaintext}'")
@@ -410,7 +456,7 @@ def main():
 
 
 
-    meta_test(0, 1, 2500, 500)
+    meta_test(0, 1, 1000, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
