@@ -1,7 +1,8 @@
 """
 Dict 2 key attack
 """
-DEBUG = False
+DEBUG = False   # all helper function output
+DEBUG_2 = False  # steps in decrypt function
 
 import alphabet
 import dictionary
@@ -244,11 +245,20 @@ def dict_2_attack_v2(ciphertext):
     """
     dict_2_attack_v2
     """
+    p_hat = preprocess.p_estimate(ciphertext)
+    if DEBUG_2:
+        print(f"\n\n *** Begin dict_2_attack_v2 *** \n")
+        print(f"ciphertext\n'{ciphertext}'\n")
+        print(f"dict_2_attack_v2 - p_hat: {p_hat}\n")
+
     cleaned_ciphertext = preprocess.remove_duplicate_char_triplets(ciphertext)
     space = decrypt.get_space_key_value(cleaned_ciphertext)
-    #print(f"space {space}")
+    if DEBUG_2:
+        print(f"dict_2_attack_v2 - space '{space}'\n")
+
     cleaned_ciphertext = preprocess.remove_double_duplicate(space, cleaned_ciphertext)
-    #print(f"cleaned_ciphertext {len(cleaned_ciphertext)}\n'{cleaned_ciphertext}'")
+    if DEBUG_2:
+        print(f"dict_2_attack_v2 - cleaned_ciphertext {len(cleaned_ciphertext)}\n'{cleaned_ciphertext}'\n")
 
     cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
     #print(f"cipher_words {cipher_words}")
@@ -256,22 +266,31 @@ def dict_2_attack_v2(ciphertext):
     #ADD INITIAL KEY GENERATOR DICT HERE to pass onto different functions
     key = {space:SPACE}
 
-    #processed_cipherwords = remove_stubs(cipher_words)
+    processed_cipherwords = remove_stubs(cipher_words)
+    if DEBUG_2:
+        print(f"dict_2_attack_v2 - processed_cipherwords {processed_cipherwords}")
     #duplicate_words = find_and_clean_duplicates(processed_cipherwords)
 
     #print(f"Processed cipher_words {processed_cipherwords}")
     # need to clean up cipherwords somehow - remove illegal spaces / remove extra chars
 
     key = build_mapping_from_cipher_words(cipher_words, space, key)
+    if DEBUG_2:
+        print(f"Key after build_mapping_from_cipher_words {key}\n")
 
 
     if is_key_map_bad(cipher_words, key):
-        if DEBUG:
+        if DEBUG_2:
             print("\n\n** MAP IS BAD ** \n\n")
         # institute fix for bad mappings
         key = recover_from_bad_key(cipher_words, key)
 
     final = space.join(cipher_words)
+    plaintext_guess = partial_decrypt(final, key)
+    if DEBUG_2:
+        print(f"\nplaintext guess {len(plaintext_guess)}\n'{plaintext_guess}'")
+        print(f"*************** DONE ****************")
+
     return partial_decrypt(final, key)
 
 
@@ -468,7 +487,7 @@ def main():
 
 
 
-    meta_test(0, 1, 10000, 500)
+    meta_test(0, 1, 1000, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
