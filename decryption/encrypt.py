@@ -15,13 +15,13 @@ TEST_M = "tumble cooked twirled absinths ceca cheatery raters redeploy niacinami
 
 TEST_BLANKS = "w" * 500
 
-def generate_key_mapping(seed = 0):
+def generate_key_mapping(seed = None):
     """
     Generates Key Mappings
     Input: an optional argument for a random generator seed
     Output: a purmuted list of integers in the range 0 to ALPHABET_SIZE (inclusive)
     """
-    #np.random.seed(seed)
+    np.random.seed(seed)
     k_mapping = [i for i, _ in enumerate(ALPHABET)]
     np.random.shuffle(k_mapping)
     return k_mapping
