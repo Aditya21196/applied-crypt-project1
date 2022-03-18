@@ -138,22 +138,33 @@ def build_mapping_from_cipher_words(cipher_words, space):
 
     for cipher_word, plaintext_possibilities in zip(cipher_words, possible_plaintext_words):
         if len(plaintext_possibilities) == 1:
-            #print(f"cipher_word {cipher_word} plaintext_possibilities {plaintext_possibilities}")
+            #print(f"cipher_word '{cipher_word}' plaintext_possibilities {plaintext_possibilities}")
             for p_char, c_char in zip(plaintext_possibilities[0], cipher_word):
                 #print(f"p_char {p_char} c_char {c_char}")
                 if p_char in unknown_chars:
+                    if DEBUG:
+                        print(f"saving  c_char '{c_char}' : p_char '{p_char}'")
+                    if c_char in key:
+                        continue
+                        #print(f"ERROR!!!! current val {key[c_char]}")
                     key[c_char] = p_char
                     unknown_chars.remove(p_char)
-
-    cipher_words_copy = cipher_words[:]
+            if DEBUG:
+                print(f"\nkey - ln 149")
+                for entry in key.items():
+                    print(f"\t{entry}")
+                print(f"uknown_chars {unknown_chars}")
+                print()
 
 
     # first pass
     for i in range(2):
-        #print(f"\ncipher_words\n")
+        if DEBUG:
+            print(f"\ncipher_words\n")
 
-        #for word in cipher_words:
-        #    print(partial_decrypt(word, key))
+            for word in cipher_words:
+                print(partial_decrypt(word, key))
+            print()
 
         for i, cipher_word in enumerate(cipher_words):
             word = partial_decrypt(cipher_word, key)
@@ -222,7 +233,7 @@ def build_mapping_from_cipher_words(cipher_words, space):
                 if p_char in unknown_chars:
                     key[c_char] = p_char
                     unknown_chars.remove(p_char)
-        else:
+        elif len(candidates) > 1:
             score = []
             for i, entry in enumerate(candidates):
                 score.append(len(find_similar_words.get_longest_common_subsequence(last_word, entry)))
@@ -335,27 +346,29 @@ def dict_2_attack_v2(ciphertext):
 
 def test_dict_2_v2_attack(size, p=0):
     errors = []
-    seed = 3361
+    test_seed = 233
     for _ in range(size):
-        generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = seed)
+        generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = test_seed)
         #print(f"generated plaintext:\n'{generated_plaintext}'")
 
-        key = encrypt.generate_key_mapping(seed=seed)
+        key = encrypt.generate_key_mapping(seed=test_seed)
         #print(f"key: {key}")
 
-        ciphertext = encrypt.encrypt(generated_plaintext, key, probability=p, seed = seed)
-        #print(f"ciphertext: \n'{ciphertext}'\n")
+        ciphertext = encrypt.encrypt(generated_plaintext, key, probability=p, seed = test_seed)
+        if DEBUG:
+            print(f"\nciphertext: \n'{ciphertext}'\n")
 
         plaintext = dict_2_attack_v2(ciphertext)
-        #print(f"plaintext len{len(plaintext)}: \n'{plaintext}'")
+        if DEBUG:
+            print(f"returned - plaintext len{len(plaintext)}: \n'{plaintext}'")
 
         if generated_plaintext != plaintext:
-            errors.append(seed)
-            print(f"\n\nERROR CAUSED BY seed({seed})")
+            errors.append(test_seed)
+            print(f"\n\nERROR CAUSED BY seed({test_seed})")
             print(f"Generated plaintext len {len(generated_plaintext)}\n'{generated_plaintext}'\n")
             print(f"Guesed plaintext len {len(generated_plaintext)}\n'{plaintext}'\n\n")
 
-        seed += 1
+        test_seed += 1
 
     print(f"test_dict_2_v2_attack {len(errors)} errors out of {size} at p = {p}")
 
