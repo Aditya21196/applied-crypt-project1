@@ -264,6 +264,8 @@ def dict_2_attack_v2(ciphertext):
     cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
     #print(f"cipher_words {cipher_words}")
 
+        #ADD INITIAL KEY GENERATOR DICT HERE to pass onto different functions
+
     #processed_cipherwords = remove_stubs(cipher_words)
     #duplicate_words = find_and_clean_duplicates(processed_cipherwords)
 
@@ -366,7 +368,7 @@ def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
 
         #if len(lcs) < substring_match_error_limit:
         if plaintext != generated_plaintext:
-            print(f"length lcs {len(lcs)}")
+            #print(f"length lcs {len(lcs)}")
             errors.append(test_seed)
             print(f"\n\nERROR CAUSED BY seed({test_seed})")
             print(f"Generated plaintext len {len(generated_plaintext)}\n'{generated_plaintext}'\n")
@@ -399,7 +401,7 @@ def main():
 
 
 
-    meta_test(0, 1, 1000, 500)
+    meta_test(0, 1, 10000, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
