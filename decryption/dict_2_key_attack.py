@@ -213,23 +213,35 @@ def build_mapping_from_cipher_words(cipher_words, space):
 
     last_word = partial_decrypt(cipher_words[-1], key)
     if UNKNOWN_CHAR in last_word:
-        print(f"last_word {last_word}")
         last_word_length = len(last_word)
         stub = last_word[:last_word.find(UNKNOWN_CHAR)]
-        print(f"stub {stub} last_word_length {last_word_length}")
         candidates = get_truncated_dict(stub, last_word_length)
 
         if len(candidates) == 1:
             for p_char, c_char in zip(candidates[0], cipher_words[-1]):
                 if p_char in unknown_chars:
-                    print(f"HERE p_char {p_char}, c_char{c_char}")
                     key[c_char] = p_char
                     unknown_chars.remove(p_char)
-                    print(f"unkown_chars {unknown_chars}")
         else:
-            #select next best
-            pass
+            score = []
+            for i, entry in enumerate(candidates):
+                score.append(len(find_similar_words.get_longest_common_subsequence(last_word, entry)))
+            max_score = max(score)
+            score = [idx for idx,score in enumerate(score) if score == max_score]
 
+            idx_unknown_char = last_word.find(UNKNOWN_CHAR)
+            for idx in score:
+                p_char = candidates[idx][idx_unknown_char]
+                if p_char in unknown_chars:
+                    c_char = cipher_words[-1][idx_unknown_char]
+                    key[c_char] = p_char
+                    unknown_chars.remove(p_char)
+
+
+            #print(f"score: {score}")
+            #print(f"max_score {max_score}")
+            #print(f"candidates {candidates}")
+            #print(f"unkown_chars {unknown_chars}")
 
     final = space.join(cipher_words)
 
