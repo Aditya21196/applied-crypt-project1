@@ -335,8 +335,8 @@ def dict_2_attack_v2(ciphertext):
     cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
     #print(f"cipher_words {cipher_words}")
 
-
     processed_cipherwords = remove_stubs(cipher_words)
+    duplicate_words = find_and_clean_duplicates(processed_cipherwords)
     #print(f"Processed cipher_words {processed_cipherwords}")
     # need to clean up cipherwords somehow - remove illegal spaces / remove extra chars
 
@@ -344,15 +344,62 @@ def dict_2_attack_v2(ciphertext):
     return text_guess
 
 
-def test_dict_2_v2_attack(size, p=0):
+def find_and_clean_duplicates(cipherwords_list):
+    """
+    takes as input the output of remove_stubs
+    """
+    print("In find_and_clean_duplicates")
+    print(cipherwords_list)
+
+    all_words_lcs = []
+    unique = set()
+
+    for i, word_1 in enumerate(cipherwords_list[:-1]):
+        word_lcs = []
+        for j, word_2 in enumerate(cipherwords_list[i+1:]):
+            lcs = find_similar_words.get_longest_common_subsequence(word_1, word_2)
+            if len(lcs) >= 5:
+                word_lcs.append((lcs, i, i + j + 1))
+                unique.add(lcs)
+        all_words_lcs.append(word_lcs)
+
+    print("\n\nall_words_lcs")
+    for entry in all_words_lcs:
+        print(entry)
+    print()
+
+    print("\n\nUnique\n")
+    for entry in unique:
+        print(entry)
+    print()
+
+    unique_by_len = list(unique)
+    unique_by_len.sort(key = lambda x : len(x), reverse=True)
+    unique_len_num_unique = [(len(w),preprocess.num_unique_chars(w)) for w in unique_by_len]
+
+    for word, (l, num_unique) in zip(unique_by_len, unique_len_num_unique):
+        if l >= 9:
+            print(f"{word} len:{l} num_unique{num_unique}")
+
+    print(f"\nPrinting dict 2 words")
+    dict_words = preprocess_dictionary_2()
+    for entry in dict_words.items():
+        print(entry)
+
+    return cipherwords_list
+
+
+
+
+def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
     errors = []
-    test_seed = 233
+    test_seed = 265
     for _ in range(size):
         generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = test_seed)
         #print(f"generated plaintext:\n'{generated_plaintext}'")
 
         key = encrypt.generate_key_mapping(seed=test_seed)
-        #print(f"key: {key}")
+        print(f"key: {key}")
 
         ciphertext = encrypt.encrypt(generated_plaintext, key, probability=p, seed = test_seed)
         if DEBUG:
@@ -362,10 +409,15 @@ def test_dict_2_v2_attack(size, p=0):
         if DEBUG:
             print(f"returned - plaintext len{len(plaintext)}: \n'{plaintext}'")
 
-        if generated_plaintext != plaintext:
+        lcs = find_similar_words.get_longest_common_subsequence(generated_plaintext, plaintext)
+
+
+        if len(lcs) < substring_match_error_limit:
+            print(f"length lcs {len(lcs)}")
             errors.append(test_seed)
             print(f"\n\nERROR CAUSED BY seed({test_seed})")
             print(f"Generated plaintext len {len(generated_plaintext)}\n'{generated_plaintext}'\n")
+            print(f"ciphertext: \n'{ciphertext}'\n")
             print(f"Guesed plaintext len {len(generated_plaintext)}\n'{plaintext}'\n\n")
 
         test_seed += 1
@@ -382,7 +434,7 @@ def meta_test(low_p, high_p, size):
 
 
 def main():
-    test_dict_2_v2_attack(1000, p=.00)
+    test_dict_2_v2_attack(1, p=.3)
 
 
 
