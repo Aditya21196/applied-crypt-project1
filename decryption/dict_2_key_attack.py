@@ -15,9 +15,8 @@ import find_similar_words
 
 UNKNOWN_CHAR = "#"
 
-_dict_2_char_frequency_mapping_million = [' ', 'e', 'r', 'a', 's', 'l', 'i', 't', 'o', 'n', 'c', 'u', 'g', 'f', 'd', 'p', 'b', 'k', 'h', 'y', 'v', 'z', 'w', 'm', 'j', 'q', 'x']
 
-_dict_2_missing = ['x', 'q', 'j']
+_dict_2_plain_chars_missing = ['x', 'q', 'j']
 
 
 def preprocess_dictionary_2():
@@ -52,72 +51,6 @@ def get_truncated_dict(a_stub, word_length):
     return truncated
 
 
-def make_key_mapping(space, sample_freq, population_freq):
-    """
-    Makes best initial key mapping
-    """
-    chars_to_pick = set(alphabet.get_alphabet())
-    candidate_key = [0 for i in range(alphabet.get_size())]
-
-    #set space val
-    candidate_key[alphabet.get_int_from_char(" ")] = alphabet.get_int_from_char(space)
-    chars_to_pick.remove(space)
-
-    # remove space from sample and population_freq
-    sample_freq.remove(space)
-    population_freq = population_freq[1:]
-
-    for s, p in zip(sample_freq, population_freq):
-        candidate_key[alphabet.get_int_from_char(p)] = alphabet.get_int_from_char(s)
-        chars_to_pick.remove(s)
-
-    for s,p in zip(list(chars_to_pick), _dict_2_missing):
-        candidate_key[alphabet.get_int_from_char(p)] = alphabet.get_int_from_char(s)
-        chars_to_pick.remove(s)
-
-    return candidate_key
-
-
-def swap_random_pair(key):
-    """
-    Swaps a random pair in the key -> never the space key
-    note: randint is inclusive so only go to 26
-    """
-    pos1 = random.randint(1, 26)
-    pos2 = random.randint(1, 26)
-    while pos2 == pos1:
-        pos2 = random.randint(1, 26)
-    key[pos1], key[pos2] = key[pos2], key[pos1]
-    return key
-
-
-def dict_2_attack_v1(ciphertext):
-    cleaned_ciphertext = preprocess.remove_duplicate_char_triplets(ciphertext)
-    space = decrypt.get_space_key_value(cleaned_ciphertext)
-    cleaned_ciphertext = preprocess.remove_double_duplicate(space, cleaned_ciphertext)
-
-    if DEBUG:
-        print(f"space is '{space}'")
-    chars = frequency.get_ordered_list_of_char_frequencies(cleaned_ciphertext)
-    if DEBUG:
-        print(f"Char Text Frequency {chars}")
-
-    key_guess = make_key_mapping(space, chars, _dict_2_char_frequency_mapping_million)
-    if DEBUG:
-        print(f"key_guess {key_guess}")
-
-    count = 0
-    while True and count < 10000:
-        key_guess = swap_random_pair(key_guess)
-        print(key_guess)
-        print(decrypt.decrypt(cleaned_ciphertext, key_guess))
-        print()
-        count+= 1
-
-
-    return decrypt.decrypt(cleaned_ciphertext, key_guess)
-
-
 def build_mapping_from_cipher_words(cipher_words, space):
     """
     builds a key mapping by compairing dict letter frequencies
@@ -127,7 +60,7 @@ def build_mapping_from_cipher_words(cipher_words, space):
     unknown_chars = set(alphabet.get_alphabet())
     unknown_chars.remove(" ")
 
-    for entry in _dict_2_missing:
+    for entry in _dict_2_plain_chars_missing:
         unknown_chars.remove(entry)
 
     dict_words = preprocess_dictionary_2()
@@ -261,7 +194,6 @@ def build_mapping_from_cipher_words(cipher_words, space):
 
 
 
-
 def get_dict_2_word_options(a_word, dict_words):
     """
     returns all the possible options the word could be
@@ -274,8 +206,6 @@ def get_dict_2_word_options(a_word, dict_words):
             if entry[1] == num_unique:
                 possible_words.append(entry[0])
     return possible_words
-
-
 
 
 def partial_decrypt(ciphertext, key):
@@ -321,7 +251,6 @@ def remove_stubs(cipher_words):
     return cipher_words_cleaned
 
 
-
 def dict_2_attack_v2(ciphertext):
     """
     dict_2_attack_v2
@@ -335,12 +264,13 @@ def dict_2_attack_v2(ciphertext):
     cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
     #print(f"cipher_words {cipher_words}")
 
-    processed_cipherwords = remove_stubs(cipher_words)
-    duplicate_words = find_and_clean_duplicates(processed_cipherwords)
+    #processed_cipherwords = remove_stubs(cipher_words)
+    #duplicate_words = find_and_clean_duplicates(processed_cipherwords)
+
     #print(f"Processed cipher_words {processed_cipherwords}")
     # need to clean up cipherwords somehow - remove illegal spaces / remove extra chars
 
-    text_guess = build_mapping_from_cipher_words(processed_cipherwords, space)
+    text_guess = build_mapping_from_cipher_words(cipher_words, space)
     return text_guess
 
 
@@ -389,55 +319,11 @@ def find_and_clean_duplicates(cipherwords_list):
     return cipherwords_list
 
 
-
-
-def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
-    errors = []
-    test_seed = 265
-    for _ in range(size):
-        generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = test_seed)
-        #print(f"generated plaintext:\n'{generated_plaintext}'")
-
-        key = encrypt.generate_key_mapping(seed=test_seed)
-        print(f"key: {key}")
-
-        ciphertext = encrypt.encrypt(generated_plaintext, key, probability=p, seed = test_seed)
-        if DEBUG:
-            print(f"\nciphertext: \n'{ciphertext}'\n")
-
-        plaintext = dict_2_attack_v2(ciphertext)
-        if DEBUG:
-            print(f"returned - plaintext len{len(plaintext)}: \n'{plaintext}'")
-
-        lcs = find_similar_words.get_longest_common_subsequence(generated_plaintext, plaintext)
-
-
-        if len(lcs) < substring_match_error_limit:
-            print(f"length lcs {len(lcs)}")
-            errors.append(test_seed)
-            print(f"\n\nERROR CAUSED BY seed({test_seed})")
-            print(f"Generated plaintext len {len(generated_plaintext)}\n'{generated_plaintext}'\n")
-            print(f"ciphertext: \n'{ciphertext}'\n")
-            print(f"Guesed plaintext len {len(generated_plaintext)}\n'{plaintext}'\n\n")
-
-        test_seed += 1
-
-    print(f"test_dict_2_v2_attack {len(errors)} errors out of {size} at p = {p}")
-
-
-def meta_test(low_p, high_p, size):
-    for i in range(low_p, high_p):
-        prob = i / 100
-        test_dict_2_v2_attack(size, p=prob)
-
-
-
 def remove_candidates_same_length(cipherword, candidates):
     """
     input cipherword : a word generated from partial decrypt -> string that may contain UNKNOWN_CHARS
          - for now assume all candidates are the same length
         TODO
-            -same length?
             - how to deal with candidates shorter than cipherword
 
     Output: a list of candidate words from candidates
@@ -455,6 +341,48 @@ def remove_candidates_same_length(cipherword, candidates):
     return valid_candidates
 
 
+# TESTING
+def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
+    errors = []
+    test_seed = 265
+    for _ in range(size):
+        generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = test_seed)
+        #print(f"generated plaintext:\n'{generated_plaintext}'")
+
+        key = encrypt.generate_key_mapping(seed=test_seed)
+        if DEBUG:
+            print(f"key: {key}")
+
+        ciphertext = encrypt.encrypt(generated_plaintext, key, probability=p, seed = test_seed)
+        if DEBUG:
+            print(f"\nciphertext: \n'{ciphertext}'\n")
+
+        plaintext = dict_2_attack_v2(ciphertext)
+        if DEBUG:
+            print(f"returned - plaintext len{len(plaintext)}: \n'{plaintext}'")
+
+        #lcs = find_similar_words.get_longest_common_subsequence(generated_plaintext, plaintext)
+
+
+        #if len(lcs) < substring_match_error_limit:
+        if plaintext != generated_plaintext:
+            print(f"length lcs {len(lcs)}")
+            errors.append(test_seed)
+            print(f"\n\nERROR CAUSED BY seed({test_seed})")
+            print(f"Generated plaintext len {len(generated_plaintext)}\n'{generated_plaintext}'\n")
+            print(f"ciphertext: \n'{ciphertext}'\n")
+            print(f"Guesed plaintext len {len(generated_plaintext)}\n'{plaintext}'\n\n")
+
+        test_seed += 1
+
+    print(f"test_dict_2_v2_attack {len(errors)} errors out of {size} at p = {p}")
+
+
+def meta_test(low_p, high_p, size, lcs_limit):
+    for i in range(low_p, high_p):
+        prob = i / 100
+        test_dict_2_v2_attack(size, p=prob, substring_match_error_limit=lcs_limit)
+
 
 def test_remove_candidates():
     test_text = "#ars#ens"
@@ -467,11 +395,11 @@ def test_remove_candidates():
 
 def main():
     #test_remove_candidates()
-    test_dict_2_v2_attack(100, p=.0)
+    #test_dict_2_v2_attack(100, p=.0)
 
 
 
-    #meta_test(5, 6, 1)
+    meta_test(0, 1, 1000, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
