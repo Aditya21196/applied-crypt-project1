@@ -13,8 +13,9 @@ import decrypt
 import random
 import find_similar_words
 
+#constants
 UNKNOWN_CHAR = "#"
-
+SPACE = " "
 
 _dict_2_plain_chars_missing = ['x', 'q', 'j']
 
@@ -81,10 +82,10 @@ def build_mapping_from_cipher_words(cipher_words, space):
     """
     builds a key mapping by compairing dict letter frequencies
     """
-    key =  {space:" "}
+    key =  {space:SPACE}
 
     unknown_chars = set(alphabet.get_alphabet())
-    unknown_chars.remove(" ")
+    unknown_chars.remove(SPACE)
 
     for entry in _dict_2_plain_chars_missing:
         unknown_chars.remove(entry)
@@ -259,7 +260,8 @@ def dict_2_attack_v2(ciphertext):
     cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
     #print(f"cipher_words {cipher_words}")
 
-        #ADD INITIAL KEY GENERATOR DICT HERE to pass onto different functions
+    #ADD INITIAL KEY GENERATOR DICT HERE to pass onto different functions
+    key = {SPACE:space}
 
     #processed_cipherwords = remove_stubs(cipher_words)
     #duplicate_words = find_and_clean_duplicates(processed_cipherwords)
@@ -353,7 +355,7 @@ def remove_candidates_same_length(cipherword, candidates):
 # TESTING
 def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
     errors = []
-    test_seed = 19793
+    test_seed = 21093
     for _ in range(size):
         generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = test_seed)
         #print(f"generated plaintext:\n'{generated_plaintext}'")
@@ -408,7 +410,7 @@ def main():
 
 
 
-    meta_test(0, 1, 10000, 500)
+    meta_test(0, 1, 2500, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
