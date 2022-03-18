@@ -432,17 +432,42 @@ def meta_test(low_p, high_p, size):
 
 
 
-def remove_candidates(key, cipherword, candidates):
+def remove_candidates_same_length(cipherword, candidates):
     """
-    input given a key, cipherword, and candidates, remove any impossible candidates
-    Output  a list of valid candidates, hopefully only one remains
-    """
+    input cipherword : a word generated from partial decrypt -> string that may contain UNKNOWN_CHARS
+         - for now assume all candidates are the same length
+        TODO
+            -same length?
+            - how to deal with candidates shorter than cipherword
 
+    Output: a list of candidate words from candidates
+    """
+    valid_candidate_idx = set(idx for idx,_ in enumerate(candidates))
+    invalid_idx = set()
+    for i, char in enumerate(cipherword):
+        if char != UNKNOWN_CHAR:
+            for idx in valid_candidate_idx:
+                if candidates[idx][i] != char:
+                    invalid_idx.add(idx)
+            valid_candidate_idx = valid_candidate_idx - invalid_idx
+
+    valid_candidates = [candidates[idx] for idx in valid_candidate_idx]
+    return valid_candidates
+
+
+
+def test_remove_candidates():
+    test_text = "#ars#ens"
+    candidates = ["bbrstens", "harshens" , "hershens", "barsbens"]
+
+    restricted_candidates = remove_candidates_same_length(test_text, candidates)
+    print(f"restricted_candidates {restricted_candidates}")
 
 
 
 def main():
-    test_dict_2_v2_attack(1, p=.0)
+    #test_remove_candidates()
+    test_dict_2_v2_attack(100, p=.0)
 
 
 
