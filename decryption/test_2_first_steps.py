@@ -47,8 +47,7 @@ def split_t2_ciphertext(cipher, dictionary):
     
     words = []
     i = j = 0
-    lengths = sorted(list(len(w) for w in dictionary), reverse=True)
-    min_len = lengths[-1]
+    min_len = min([len(w) for w in dictionary])
     # The minimum length of a word in the dictionary
     
     while i < len(cipher):
@@ -74,12 +73,13 @@ def split_t2_ciphertext(cipher, dictionary):
 
 def find_matches_for_duplicates(words, dictionary):
     res = set()
-    h = {w: True for w in dictionary}
+    #h = {w: True for w in dictionary}
     
     for i in range(len(words)):
         for j in range(i + 1, len(words)):
             seq = get_longest_common_subsequence(words[i], words[j])
-            for w in h:
+            for w in dictionary:
+            #for w in h:
                 if len(w) == len(seq):
                     res.add((w, seq))
                     
@@ -162,14 +162,14 @@ def find_test2_accuracy(mapping, plaintext, ciphertext, dictionary):
         dec_2.append(all_len[0][0])
 
     final_dec = " ".join(dec_2)
-    #print("\n\nFinal decrypted text: ")
-    #print(final_dec)
-    #print("\n\nOriginal plaintext: ")
-    #print(t2_plain)
+    print("\n\nFinal decrypted text: ")
+    print(final_dec)
+    print("\n\nOriginal plaintext: ")
+    print(plaintext)
 
     seq = get_longest_common_subsequence(final_dec, plaintext)
     acc = len(seq) / len(plaintext)
-    #print("\n\nAccuracy: " + str(acc))
+    print("\n\nAccuracy: " + str(acc))
     
     return acc
     
@@ -204,12 +204,12 @@ def stress_test(rand_p, dictionary, round_cnt):
     return res
 
 if __name__ == "__main__":
-    p = 0.5
+    p = 0.0
     out = []
     while p < 1:
         #t1 = datetime.now().strftime("%H:%M:%S")
         #print("Test is starting. Current time: " + t1)
-        res = stress_test(p, dictionary, 10)
+        res = stress_test(p, dictionary, 1)
         print(res)
 
         #t2 = datetime.now().strftime("%H:%M:%S")
