@@ -266,7 +266,8 @@ def dict_2_attack_v2(ciphertext):
 
 
     if is_key_map_bad(cipher_words, key):
-        print("\n\n** MAP IS BAD ** \n\n")
+        if DEBUG:
+            print("\n\n** MAP IS BAD ** \n\n")
         # institute fix for bad mappings
         key = recover_from_bad_key(cipher_words, key)
 
@@ -277,6 +278,7 @@ def dict_2_attack_v2(ciphertext):
 def recover_from_bad_key(cipherwords, key):
     """
     Assume the key is close and only a few mappings are wrong
+    If all ciphertext chars are mapped it will return true
     """
     dict_2 = dictionary.get_dictionary_2()
     dict_words = preprocess_dictionary_2()
@@ -284,23 +286,33 @@ def recover_from_bad_key(cipherwords, key):
         word = partial_decrypt(cipherword, key)
         if word not in dict_2:
             candidates = get_dict_2_word_options(cipherword, dict_words)
-            print(f"candidates {candidates}")
+            if DEBUG:
+                print(f"candidates {candidates}")
             restricted_candidates = remove_candidates_same_length(word, candidates)
-            print(f"restricted_candidates {len(restricted_candidates)} {restricted_candidates}")
+            if DEBUG:
+                print(f"restricted_candidates {len(restricted_candidates)} {restricted_candidates}")
             if len(restricted_candidates) == 1:
-                print()
                 missing_idx = word.find(UNKNOWN_CHAR)
-                print(f"word {word} missing idx {missing_idx}")
+                if DEBUG:
+                    print(f"word {word} missing idx {missing_idx}")
                 p_char = restricted_candidates[0][missing_idx]
                 c_char = cipherword[missing_idx]
                 #delete char that currently maps to p_char
+                if DEBUG:
+                    print(f"key - before delete {key}")
+                if p_char in key.values():
+                    key = {k:v for k,v in key.items() if v is not p_char}
+
+                if DEBUG:
+                    print(f"key - after delete {key}")
 
                 key[c_char] = p_char
 
-                print(f"p_char {p_char} c_char {c_char} current")
-                print(f"key : {key}")
-                print(f"mapped to key[c_char] {key[c_char]}")
-                print()
+                if DEBUG:
+                    print(f"p_char {p_char} c_char {c_char} current")
+                    print(f"key : {key}")
+                    print(f"mapped to key[c_char] {key[c_char]}")
+                    print()
 
 
     return key
@@ -456,7 +468,7 @@ def main():
 
 
 
-    meta_test(0, 1, 1000, 500)
+    meta_test(0, 1, 10000, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
