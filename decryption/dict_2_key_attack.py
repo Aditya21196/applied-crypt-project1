@@ -45,9 +45,12 @@ def preprocess_dictionary_2():
     return length_dict
 
 
-def get_truncated_dict(a_stub, word_length):
+def get_truncated_dict(word_length):
+    """
+    returns all the words in the dict as long as word_length truncated to word_length
+    """
     words = dictionary.get_dictionary_2()
-    truncated = [word[:word_length] for word in words if len(word) >= word_length and word[:len(a_stub)] == a_stub]
+    truncated = [word[:word_length] for word in words if len(word) >= word_length]
     return truncated
 
 
@@ -116,37 +119,9 @@ def build_mapping_from_cipher_words(cipher_words, space):
 
         print("\n\n")
 
-
-    # first pass
-    '''
-    for i in range(2):
-        if DEBUG:
-            print(f"\ncipher_words\n")
-
-            for word in cipher_words:
-                print(partial_decrypt(word, key))
-            print()
-
-        for i, cipher_word in enumerate(cipher_words):
-            word = partial_decrypt(cipher_word, key)
-            if UNKNOWN_CHAR in word:
-                idx_of_unknown = word.find(UNKNOWN_CHAR)
-                suffix = word[:idx_of_unknown]
-                match_candidates = []
-                for entry in possible_plaintext_words[i]:
-                    if suffix == entry[:idx_of_unknown]:
-                        match_candidates.append(entry)
-
-                if len(match_candidates) == 1:
-                    for p_char, c_char in zip(match_candidates[0], cipher_word):
-                        if p_char in unknown_chars:
-                            key[c_char] = p_char
-                            unknown_chars.remove(p_char)
-    '''
     for i in range(1):
         if DEBUG:
             print(f"\ncipher_words\n")
-
             for word in cipher_words:
                 print(partial_decrypt(word, key))
             print()
@@ -178,82 +153,37 @@ def build_mapping_from_cipher_words(cipher_words, space):
 
         print("\n\n")
 
-    '''
-    # repeat pass to fill in missing
-    for i in range(2):
-        for i, cipher_word in enumerate(cipher_words):
-            word = partial_decrypt(cipher_word, key)
-            if UNKNOWN_CHAR in word:
-                unknown_count = word.count(UNKNOWN_CHAR)
-                first_unknown_idx = word.find(UNKNOWN_CHAR)
-                match_candidates = []
-                if first_unknown_idx == 0:
-                    truncated_word = word[1:]
-                    if unknown_count == 1:
-                        for entry in possible_plaintext_words[i]:
-                            if truncated_word == entry[1:]:
-                                match_candidates.append(entry)
-                    else:  # unknown_count > 1
-                        next_unknown_idx = truncated_word.find(UNKNOWN_CHAR)
-                        more_truncated = truncated_word[:next_unknown_idx]
-                        for entry in possible_plaintext_words[i]:
-                            if more_truncated == entry[1:next_unknown_idx]:
-                                match_candidates.append(entry)
-                else:  #first char of word is known
-                    truncated_word = word[:first_unknown_idx]
-                    for entry in possible_plaintext_words[i]:
-                        if len(entry) < first_unknown_idx:
-                            if truncated_word == entry[:first_unknown_idx]:
-                                match_candidates.append(entry)
-
-                if len(match_candidates) == 1:
-                    for p_char, c_char in zip(match_candidates[0], cipher_word):
-                        if p_char in unknown_chars:
-                            key[c_char] = p_char
-                            unknown_chars.remove(p_char)
-
-                elif word == "#ars#ens":
-                    c_char = cipher_word[0]
-                    p_char = "h"
-                    key[c_char] = p_char
-                    unknown_chars.remove(p_char)
-    '''
-
 
     last_word = partial_decrypt(cipher_words[-1], key)
     if UNKNOWN_CHAR in last_word:
         last_word_length = len(last_word)
-        stub = last_word[:last_word.find(UNKNOWN_CHAR)]
-        candidates = get_truncated_dict(stub, last_word_length)
+        candidates = get_truncated_dict(last_word_length)
+        restricted_candidates = remove_candidates_same_length(last_word, candidates)
 
-        if len(candidates) == 1:
-            for p_char, c_char in zip(candidates[0], cipher_words[-1]):
-                if p_char in unknown_chars:
-                    key[c_char] = p_char
-                    unknown_chars.remove(p_char)
-        elif len(candidates) > 1:
-            score = []
-            for i, entry in enumerate(candidates):
-                score.append(len(find_similar_words.get_longest_common_subsequence(last_word, entry)))
-            max_score = max(score)
-            score = [idx for idx,score in enumerate(score) if score == max_score]
+        if DEBUG:
+            print(f"Last Word {last_word} restricted_candidates {restricted_candidates}")
 
-            idx_unknown_char = last_word.find(UNKNOWN_CHAR)
-            for idx in score:
-                p_char = candidates[idx][idx_unknown_char]
-                if p_char in unknown_chars:
-                    c_char = cipher_words[-1][idx_unknown_char]
-                    key[c_char] = p_char
-                    unknown_chars.remove(p_char)
+        if len(restricted_candidates) > 1:
+            # remove candidates until only 1:
+            unknown_idx = last_word.find(UNKNOWN_CHAR)
+            unknown_cipher_char = cipher_words[-1][unknown_idx]
+            plaintext_char_candidates = [i for i, stub in enumerate(restricted_candidates) \
+                if stub[unknown_idx] not in key.values()]
 
+            restricted_candidates = [restricted_candidates[plaintext_char_candidates[0]]]
 
-            #print(f"score: {score}")
-            #print(f"max_score {max_score}")
-            #print(f"candidates {candidates}")
-            #print(f"unkown_chars {unknown_chars}")
+            if DEBUG:
+                print(f"restricted_candidates {restricted_candidates}")
+                print(f"unknown_idx {unknown_idx}")
+                print(f"unknown_cipher_char {unknown_cipher_char}")
+                print(f"plaintext_char_candidates {plaintext_char_candidates}")
+                print(f"key {key}")
+
+        if len(restricted_candidates) == 1:
+            key = key_mapping(key, cipher_words[-1], restricted_candidates[0])
+
 
     final = space.join(cipher_words)
-
 
     return partial_decrypt(final, key)
 
@@ -423,7 +353,7 @@ def remove_candidates_same_length(cipherword, candidates):
 # TESTING
 def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
     errors = []
-    test_seed = 9874
+    test_seed = 19793
     for _ in range(size):
         generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = test_seed)
         #print(f"generated plaintext:\n'{generated_plaintext}'")
