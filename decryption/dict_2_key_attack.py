@@ -51,6 +51,29 @@ def get_truncated_dict(a_stub, word_length):
     return truncated
 
 
+
+def key_mapping(key_map, cipher_word, plaintext_word):
+    """
+    Input key_map -> a dictionary of {p_char : c_char}
+    cipherword (str) -> an encrypted word
+    candidate (str) -> the plaintext word
+    """
+    for p_char, c_char in zip(plaintext_word, cipher_word):
+        if DEBUG:
+            print(f"in key mapping")
+            print(f"p_char {p_char} c_char {c_char}")
+        if p_char not in key_map.values():
+            if DEBUG:
+                print(f"saving  c_char '{c_char}' : p_char '{p_char}'")
+            if c_char in key_map.keys():
+                if DEBUG:
+                    print(f"ERROR!!!! c_char in map already current val {key_map[c_char]}")
+                continue
+            key_map[c_char] = p_char
+    return key_map
+
+
+
 def build_mapping_from_cipher_words(cipher_words, space):
     """
     builds a key mapping by compairing dict letter frequencies
@@ -72,25 +95,30 @@ def build_mapping_from_cipher_words(cipher_words, space):
     for cipher_word, plaintext_possibilities in zip(cipher_words, possible_plaintext_words):
         if len(plaintext_possibilities) == 1:
             #print(f"cipher_word '{cipher_word}' plaintext_possibilities {plaintext_possibilities}")
-            for p_char, c_char in zip(plaintext_possibilities[0], cipher_word):
-                #print(f"p_char {p_char} c_char {c_char}")
-                if p_char in unknown_chars:
-                    if DEBUG:
-                        print(f"saving  c_char '{c_char}' : p_char '{p_char}'")
-                    if c_char in key:
-                        continue
-                        #print(f"ERROR!!!! current val {key[c_char]}")
-                    key[c_char] = p_char
-                    unknown_chars.remove(p_char)
+            key = key_mapping(key, cipher_word, plaintext_possibilities[0])
             if DEBUG:
                 print(f"\nkey - ln 149")
                 for entry in key.items():
                     print(f"\t{entry}")
                 print(f"uknown_chars {unknown_chars}")
+
                 print()
+
+    if DEBUG:
+        print(f"plaintext_possibilites")
+        for entry in possible_plaintext_words:
+            print(entry)
+
+    if DEBUG:
+        print(f"Current decryption before first pass")
+        for entry in cipher_words:
+            print(partial_decrypt(entry, key))
+
+        print("\n\n")
 
 
     # first pass
+    '''
     for i in range(2):
         if DEBUG:
             print(f"\ncipher_words\n")
@@ -114,7 +142,43 @@ def build_mapping_from_cipher_words(cipher_words, space):
                         if p_char in unknown_chars:
                             key[c_char] = p_char
                             unknown_chars.remove(p_char)
+    '''
+    for i in range(1):
+        if DEBUG:
+            print(f"\ncipher_words\n")
 
+            for word in cipher_words:
+                print(partial_decrypt(word, key))
+            print()
+
+        for i, cipher_word in enumerate(cipher_words):
+            word = partial_decrypt(cipher_word, key)
+            if UNKNOWN_CHAR in word:
+                candidates = possible_plaintext_words[i]
+
+                if DEBUG:
+                    print(f"\tBEFORE REMOVED word {word} candidates {candidates}")
+
+                restricted_candidates = remove_candidates_same_length(word, candidates)
+                possible_plaintext_words[i] = restricted_candidates
+
+                if DEBUG:
+                    print(f"\tAFTER REMOVED word {word} candidates {restricted_candidates}")
+
+                if len(restricted_candidates) == 1:
+                    if DEBUG:
+                        print(f"ln 148 word {word} restricted_candidates {restricted_candidates}")
+
+                    key = key_mapping(key, cipher_word, restricted_candidates[0])
+
+    if DEBUG:
+        print(f"\nCurrent decryption after first pass")
+        for entry in cipher_words:
+            print(partial_decrypt(entry, key))
+
+        print("\n\n")
+
+    '''
     # repeat pass to fill in missing
     for i in range(2):
         for i, cipher_word in enumerate(cipher_words):
@@ -153,6 +217,7 @@ def build_mapping_from_cipher_words(cipher_words, space):
                     p_char = "h"
                     key[c_char] = p_char
                     unknown_chars.remove(p_char)
+    '''
 
 
     last_word = partial_decrypt(cipher_words[-1], key)
@@ -330,8 +395,15 @@ def remove_candidates_same_length(cipherword, candidates):
 
     Output: a list of candidate words from candidates
     """
+    if DEBUG:
+        print("In remove_candidates_same_length")
     valid_candidate_idx = set(idx for idx,_ in enumerate(candidates))
     invalid_idx = set()
+
+    if DEBUG:
+        print(f"Starting valid_candidate_idx {valid_candidate_idx}")
+        print(f"Starting invalid_idx {invalid_idx}")
+
     for i, char in enumerate(cipherword):
         if char != UNKNOWN_CHAR:
             for idx in valid_candidate_idx:
@@ -340,13 +412,18 @@ def remove_candidates_same_length(cipherword, candidates):
             valid_candidate_idx = valid_candidate_idx - invalid_idx
 
     valid_candidates = [candidates[idx] for idx in valid_candidate_idx]
+
+    if DEBUG:
+        print(f"Ending valid_candidate_idx {valid_candidate_idx}")
+        print(f"Ending invalid_idx {invalid_idx}")
+
     return valid_candidates
 
 
 # TESTING
 def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
     errors = []
-    test_seed = 265
+    test_seed = 9874
     for _ in range(size):
         generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = test_seed)
         #print(f"generated plaintext:\n'{generated_plaintext}'")
