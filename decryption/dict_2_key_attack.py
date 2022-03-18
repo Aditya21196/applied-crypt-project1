@@ -432,9 +432,17 @@ def meta_test(low_p, high_p, size):
 
 
 
+def remove_candidates(key, cipherword, candidates):
+    """
+    input given a key, cipherword, and candidates, remove any impossible candidates
+    Output  a list of valid candidates, hopefully only one remains
+    """
+
+
+
 
 def main():
-    test_dict_2_v2_attack(1, p=.3)
+    test_dict_2_v2_attack(1, p=.0)
 
 
 
