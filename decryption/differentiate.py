@@ -213,7 +213,7 @@ def test_get_all_char_idx():
 
 def main():
     #test_differentiate()
-    test_differentiate_single(p = .30, text_1_id=0)
+    test_differentiate_single(p = .00, text_1_id=3)
     #test_get_all_char_idx()
 
 

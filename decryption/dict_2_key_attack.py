@@ -11,6 +11,7 @@ import preprocess
 import encrypt
 import decrypt
 import random
+import find_similar_words
 
 UNKNOWN_CHAR = "#"
 
@@ -236,6 +237,28 @@ def partial_decrypt(ciphertext, key):
     return plain
 
 
+def remove_noise(cipher_words):
+    """
+    used to eliminate noise
+    """
+    cipher_words_cleaned = cipher_words[:]
+    short_parts = [ (word, idx) for idx, word in enumerate(cipher_words_cleaned) if len(word) < 5]
+    #print(f"short_parts {short_parts}")
+    while short_parts:
+        current_substring, idx = short_parts.pop()
+        print(f"current {current_substring}, idx {idx}")
+        if idx == 0:
+            cipher_words_cleaned[idx+1] = current_substring + cipher_words_cleaned[idx+1]
+        elif idx < len(cipher_words_cleaned) - 1:
+            cipher_words_cleaned[idx-1] = cipher_words_cleaned[idx-1] + current_substring
+            cipher_words_cleaned[idx+1] = current_substring + cipher_words_cleaned[idx+1]
+        else: #at the end
+            pass
+
+
+    return cipher_words_cleaned
+
+
 
 def dict_2_attack_v2(ciphertext):
     """
@@ -243,11 +266,18 @@ def dict_2_attack_v2(ciphertext):
     """
     cleaned_ciphertext = preprocess.remove_duplicate_char_triplets(ciphertext)
     space = decrypt.get_space_key_value(cleaned_ciphertext)
-    #print(f"space {space}")
+    print(f"space {space}")
     cleaned_ciphertext = preprocess.remove_double_duplicate(space, cleaned_ciphertext)
-    #print(f"cleaned_ciphertext {len(cleaned_ciphertext)}\n'{cleaned_ciphertext}'")
+    print(f"cleaned_ciphertext {len(cleaned_ciphertext)}\n'{cleaned_ciphertext}'")
 
     cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
+    #print(f"cipher_words {cipher_words}")
+
+
+    processed_cipherwords = remove_noise(cipher_words)
+    #print(f"Processed cipher_words {processed_cipherwords}")
+    # need to clean up cipherwords somehow - remove illegal spaces / remove extra chars
+
     text_guess = build_mapping_from_cipher_words(cipher_words, space)
     return text_guess
 
@@ -257,16 +287,16 @@ def test_dict_2_v2_attack(size, p=0):
     seed = None
     for i in range(size):
         generated_plaintext = dictionary.make_random_dictionary_2_plaintext(seed = seed)
-        #print(f"generated plaintext:\n'{generated_plaintext}'")
+        print(f"generated plaintext:\n'{generated_plaintext}'")
 
         key = encrypt.generate_key_mapping()
         #print(f"key: {key}")
 
         ciphertext = encrypt.encrypt(generated_plaintext, key, probability=p)
-        #print(f"ciphertext: \n'{ciphertext}'\n")
+        print(f"ciphertext: \n'{ciphertext}'\n")
 
         plaintext = dict_2_attack_v2(ciphertext)
-        #print(f"plaintext len{len(plaintext)}: \n'{plaintext}'")
+        print(f"plaintext len{len(plaintext)}: \n'{plaintext}'")
 
         if generated_plaintext != plaintext:
             errors.append(seed)
@@ -289,8 +319,8 @@ def meta_test(low_p, high_p, size):
 
 def main():
     #test_dict_2_v2_attack(100, p=.15)
-    meta_test(10, 11, 1)
-
+    meta_test(5, 6, 1)
+    #print(remove_noise(["abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
 
 
