@@ -438,7 +438,8 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
 
                 if c_char in key.keys():
                     if key[c_char] != p_char:
-                        print(f"c_char '{c_char}' in keys, maps to '{key[c_char]}', while p_char = '{p_char}'")
+                        if DEBUG:
+                            print(f"c_char '{c_char}' in keys, maps to '{key[c_char]}', while p_char = '{p_char}'")
                         if p_char in key.values():
                             for k, v in key.items():
                                 if v == p_char:
@@ -447,15 +448,16 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
                         key[c_char] = p_char
 
                 else: # c_char not in dict
-                    print(f"c_char '{c_char}' not in keys -> an unknown char")
+                    print(f" HERE c_char '{c_char}' not in keys -> an unknown char")
                     if p_char in key.values():
-                        print(f"we've found an incorreclty mapped char")
-
-
-
+                        print(f" HERE we've found an incorreclty mapped char")
+                        for k, v in key.items():
+                            if v == p_char:
+                                del key[k]
+                                break
+                    key[c_char] = p_char
 
             score = key_map_scoring_function(cipherwords_list, key)
-
 
     else:
         # attack this second
@@ -467,6 +469,7 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
     print(f"\n\t -- ENDING SCORE {score}\n\n")
 
     return key
+
 
 def key_map_scoring_function(cipherwords_list, key):
     """
@@ -480,6 +483,7 @@ def key_map_scoring_function(cipherwords_list, key):
         if word in dict_2:
             score += 1
     return score
+
 
 def lcs_closest_match(word_with_unknowns, dict_list):
     """
@@ -868,7 +872,7 @@ def main():
 
 
 
-    meta_test(0, 15, 2, 500)
+    meta_test(0, 50, 2, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
