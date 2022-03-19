@@ -392,10 +392,16 @@ def try_to_map_unkowns(cipherwords_list, key):
                 if len(missing_char) == 1:
                     c_char = cipherword[unknown_idx]
                     p_char = missing_char.pop()
+                    key_to_delete = None
+                    for c, p in key.items():
+                        if p == p_char:
+                            key_to_delete = c
+                    if key_to_delete:
+                        del key[key_to_delete]
                     key[c_char] = p_char
-                    #print(f"key")
-                    #print_dict(key)
-                    #print(f"unknown_idx {unknown_idx}")
+
+                    if is_key_corrupted(key):
+                        print(f"key corrupted ln 398")
 
 
                 elif len(missing_char) == 0:
@@ -413,6 +419,8 @@ def try_to_map_unkowns(cipherwords_list, key):
                     if FUNC_DEBUG:
                         print(f" IN BAD MAPPING - MUTATE key? - word '{word}' cipherword '{cipherword}' closes_match '{closest_match}'")
                     key = improve_single_word_key_mapping(cipherwords_list, cipherword, closest_match, key)
+                    if is_key_corrupted(key):
+                        print(f"key corrupted ln 415")
 
                     if FUNC_DEBUG:
                         print(f" AFTER BAD MAPPING IMPROVE = {partial_decrypt(cipherword, key)}")
@@ -882,8 +890,12 @@ def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
 
 
 def meta_test(low_p, high_p, size, lcs_limit):
+    print(f" *** META TEST *** ")
+    print(f"\nlow_p  = {low_p} / 100  high_p = {high_p} / 100   test runs per prob: {size}")
+
     for i in range(low_p, high_p):
         prob = i / 100
+        print(f"\n\n --  Tests at Prop {prob} -- ")
         test_dict_2_v2_attack(size, p=prob, substring_match_error_limit=lcs_limit)
 
 
@@ -902,7 +914,7 @@ def main():
 
 
 
-    meta_test(0, 30, 2, 500)
+    meta_test(10, 16, 10, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
