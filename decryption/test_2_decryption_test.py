@@ -2,7 +2,7 @@
 Module to test dictionary 2 attacks
 
 """
-DEBUG = False
+DEBUG = True
 
 from pydoc import plain
 import random
@@ -331,13 +331,13 @@ def find_plaintext(words, ciphertext):
     return solution
 
 
-def stress_test(low_p, high_p, step, num_repeats, dict):
+def stress_test(low_p, high_p, step, num_repeats):
     seed = 0
     for p in range(low_p, high_p, step):
         prob = p / 100
         for j in range(num_repeats):
             print(f"\n\nCurrent Iteration p {p} j {j} seed {seed}")
-            plaintext = make_a_dict_2_plaintext(dict, seed)
+            plaintext = dictionary.make_random_dictionary_2_plaintext(seed)
             ciphertext = encrypt.encrypt(plaintext, encrypt.BLANK_KEY, prob, seed)
             cleaned_ciphertext = preprocess.remove_duplicate_char_triplets(ciphertext)
             plaintext_guess = find_plaintext(dict, cleaned_ciphertext)
@@ -531,6 +531,9 @@ def generate_best_initial_mapping(key_space):
 
 
 def main():
+    stress_test(0,5,5,5)
+
+    '''
 
     f_test = frequency_test(test_size=1000000, hash_length_in=27)
 
@@ -552,6 +555,7 @@ def main():
     best_key = generate_best_initial_mapping(key_space)
 
     print(f"best_key {best_key} and len of key {len(best_key)}")
+    '''
 
 
 
