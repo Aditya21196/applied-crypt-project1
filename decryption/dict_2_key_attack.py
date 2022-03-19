@@ -355,6 +355,29 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
     # remove nulls again
     processed_cipherwords = remove_nulls_from_cipherwords(processed_cipherwords, key)
 
+
+    score = key_map_scoring_function(processed_cipherwords, key)
+
+    while score < 40:
+        print(f"current score {score}")
+        if score == 0:
+            print(f"HERE - HARD ALL WRONG")
+
+        if score < 8 and score > 0:
+            print(f"HERE - NEED TO RADICALLY BRUTE FORCE KEYS")
+
+        if score < 40:
+            print(f"\n\tLess than 40 - Fixable?\n")
+        break
+
+
+    processed_cipherwords, key = high_p_final_output(processed_cipherwords, key)
+
+    # map to known cipherwords
+
+    # fix last truncated word
+
+
     '''
     if is_key_map_bad(cipher_words, key):
         if DEBUG_2:
@@ -363,6 +386,36 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
         key = recover_from_bad_key(cipher_words, key)
     '''
     return processed_cipherwords, key
+
+
+def high_p_final_output(processed_cipherwords, key):
+    """
+    takes in processed_cipherwords and key
+    returns final process_cipherwords and key
+    """
+    total_alphabet = set(alphabet.get_alphabet())
+    plaintext_chars_mapped = set()
+    for _, p in key.items():
+        plaintext_chars_mapped.add(p)
+
+    print(f"TOTAL ALPHABET : {total_alphabet}")
+    print(f"plaintest_chars_mapped: {plaintext_chars_mapped}")
+
+    final = []
+    not_found = []
+    dict_2 = dictionary.get_dictionary_2()
+
+    # first, map any unmapped characters
+    for cipherword in processed_cipherwords:
+        word = partial_decrypt(cipherword, key)
+        if UNKNOWN_CHAR in word:
+            print(f"word {word}")
+
+
+
+    return processed_cipherwords, key
+
+
 
 
 def try_to_map_unkowns(cipherwords_list, key):
@@ -479,11 +532,12 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
     else:
         # attack this second
         #if FUNC_DEBUG:
-        print(f"DIFFERENT LENGTHS !!!!!")
-        print(f"cipher '{cipherword}' partial '{partial_decrypt(cipherword,key)}' target_word '{target_word}' ")
+        if FUNC_DEBUG:
+            print(f"DIFFERENT LENGTHS !!!!!")
+            print(f"cipher '{cipherword}' partial '{partial_decrypt(cipherword,key)}' target_word '{target_word}' ")
 
-        if is_key_corrupted(key):
-            print(f" *** KEY IS CORRUPTED ***")
+            if is_key_corrupted(key):
+                print(f" *** KEY IS CORRUPTED ***")
 
         score = 1 + key_map_scoring_function(cipherwords_list, key)
 
@@ -914,7 +968,7 @@ def main():
 
 
 
-    meta_test(10, 16, 10, 500)
+    meta_test(5, 6, 10, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
