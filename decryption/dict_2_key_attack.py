@@ -306,6 +306,8 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
 
     key = initialize_high_p_key(potential_duplicates, key)
     if DEBUG_2:
+        if is_key_corrupted(key):
+            print(f"key corrupted ln 307")
         print(f"After initialize_high_p_key num key values {len(key)}")
         print_dict(key)
 
@@ -325,7 +327,9 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
 
     # next run through and look for any exact matches
     key = check_exact_word_lengths_for_matches(processed_cipherwords, key)
-
+    if DEBUG_2:
+        if is_key_corrupted(key):
+            print(f"key corrupted ln 329")
 
 
     # remove nulls again
@@ -333,6 +337,9 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
 
 
     key = check_exact_word_lengths_for_matches(processed_cipherwords, key)
+    if DEBUG_2:
+        if is_key_corrupted(key):
+            print(f"key corrupted ln 337")
 
     # remove up to n UNKNOWN CHARS
     processed_cipherwords = remove_n_unknowns_from_cipherwords(processed_cipherwords, key, 3)
@@ -340,6 +347,9 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
 
     # check words with unknowns and try to find a good mapping for them
     key = try_to_map_unkowns(processed_cipherwords, key)
+    if DEBUG_2:
+        if is_key_corrupted(key):
+            print(f"key corrupted ln 344")
 
 
     # remove nulls again
@@ -359,8 +369,10 @@ def try_to_map_unkowns(cipherwords_list, key):
     """
     maps key and mutates cipherwords_list
     """
+    FUNC_DEBUG = False
 
-    print(f"\n\nTRY TO MAP UNKOWNS")
+    if FUNC_DEBUG:
+        print(f"\n\nTRY TO MAP UNKOWNS")
     dict_2 = dictionary.get_dictionary_2()
 
     for i, cipherword in enumerate(cipherwords_list):
@@ -387,32 +399,23 @@ def try_to_map_unkowns(cipherwords_list, key):
 
 
                 elif len(missing_char) == 0:
-                    print(f" IN EXTRA CHAR - MUTATE mapping - word {word} closes_match {closest_match}")
-                    #print(f"c_char {c_char}")
+                    if FUNC_DEBUG:
+                        print(f" IN EXTRA CHAR - MUTATE mapping - word {word} closes_match {closest_match}")
+                        #print(f"c_char {c_char}")
 
                     cipherwords_list[i] = map_plaintext_to_ciphertext(closest_match,key)
-                    print(f"i {i} word fixed")
-                    pass
+
+                    if FUNC_DEBUG:
+                        print(f"i {i} word fixed")
+
 
                 else:  #bad key mapping"
-                    print(f" IN BAD MAPPING - MUTATE key? - word '{word}' cipherword '{cipherword}' closes_match '{closest_match}'")
+                    if FUNC_DEBUG:
+                        print(f" IN BAD MAPPING - MUTATE key? - word '{word}' cipherword '{cipherword}' closes_match '{closest_match}'")
                     key = improve_single_word_key_mapping(cipherwords_list, cipherword, closest_match, key)
-                    print(f" AFTER BAD MAPPING IMPROVE = {partial_decrypt(cipherword, key)}")
 
-                    # a possible anoying corner case where char is miss mapped
-                        #can only manifest as an empty set when looking for the char to fill
-                            #in that case a systematic search must be done
-                            #only a char in the target word can be miss assigned
-
-
-                #print()
-
-
-
-                # TODO find char in closest word not in word
-
-                    #map cipher char to plaintext char
-                    #mutate cipherword
+                    if FUNC_DEBUG:
+                        print(f" AFTER BAD MAPPING IMPROVE = {partial_decrypt(cipherword, key)}")
 
     return key
 
@@ -422,23 +425,27 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
     This is called when there is a suspected bad mapping of a word
     returns a better key if one is found
     """
+    FUNC_DEBUG = False
+
     starting_score = key_map_scoring_function(cipherwords_list, key)
     starting_key = key.copy()
     score = 0
     #print(f"key")
     #print_dict(key)
 
-    print(f"\t -- STARTING SCORE : {starting_score}")
+    if FUNC_DEBUG:
+        print(f"\t -- STARTING SCORE : {starting_score}")
 
     if len(cipherword) == len(target_word) and len(cipherword) >= 5:
         if preprocess.num_unique_chars(cipherword) == preprocess.num_unique_chars(target_word):
-            print(f"CIPHERWORD {cipherword} and TARGET WORD {target_word} same length")
+            if FUNC_DEBUG:
+                print(f"CIPHERWORD {cipherword} and TARGET WORD {target_word} same length")
             for c_char, p_char in zip(cipherword, target_word):
                 #print(f"c_char '{c_char}', p_char '{p_char}'")
 
                 if c_char in key.keys():
                     if key[c_char] != p_char:
-                        if DEBUG:
+                        if FUNC_DEBUG:
                             print(f"c_char '{c_char}' in keys, maps to '{key[c_char]}', while p_char = '{p_char}'")
                         if p_char in key.values():
                             for k, v in key.items():
@@ -448,9 +455,11 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
                         key[c_char] = p_char
 
                 else: # c_char not in dict
-                    print(f" HERE c_char '{c_char}' not in keys -> an unknown char")
+                    if FUNC_DEBUG:
+                        print(f" HERE c_char '{c_char}' not in keys -> an unknown char")
                     if p_char in key.values():
-                        print(f" HERE we've found an incorreclty mapped char")
+                        if FUNC_DEBUG:
+                            print(f" HERE we've found an incorreclty mapped char")
                         for k, v in key.items():
                             if v == p_char:
                                 del key[k]
@@ -461,14 +470,35 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
 
     else:
         # attack this second
+        #if FUNC_DEBUG:
         print(f"DIFFERENT LENGTHS !!!!!")
+        print(f"cipher '{cipherword}' partial '{partial_decrypt(cipherword,key)}' target_word '{target_word}' ")
+
+        if is_key_corrupted(key):
+            print(f" *** KEY IS CORRUPTED ***")
+
+        score = 1 + key_map_scoring_function(cipherwords_list, key)
+
 
     if score <= starting_score:
         key = starting_key
 
-    print(f"\n\t -- ENDING SCORE {score}\n\n")
+    if FUNC_DEBUG:
+        print(f"\n\t -- ENDING SCORE {score}\n\n")
 
     return key
+
+def is_key_corrupted(key):
+    """
+    returns true if two different c_chars map to the same p_char
+    """
+    p_chars = set()
+    for _, p_char in key.items():
+        if p_char in p_chars:
+            return True
+        p_chars.add(p_char)
+    return False
+
 
 
 def key_map_scoring_function(cipherwords_list, key):
@@ -872,7 +902,7 @@ def main():
 
 
 
-    meta_test(0, 50, 2, 500)
+    meta_test(0, 30, 2, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
