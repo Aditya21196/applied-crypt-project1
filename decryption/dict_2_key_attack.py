@@ -368,12 +368,13 @@ def try_to_map_unkowns(cipherwords_list, key):
         if unknown_count == 1:
             closest_match = lcs_closest_match(word, dict_2)
             if closest_match:
-                print(f"word {word} closest_word {closest_match}")
+                #print(f"word {word} closest_word {closest_match}")
                 match_chars = set(closest_match)
                 word_chars = set(word)
                 word_chars.remove(UNKNOWN_CHAR)
                 missing_char = match_chars - word_chars
                 unknown_idx = word.find(UNKNOWN_CHAR)
+                #print(f"match {match_chars} word_chars {word_chars} missing {missing_char}")
 
                 if len(missing_char) == 1:
                     c_char = cipherword[unknown_idx]
@@ -385,13 +386,19 @@ def try_to_map_unkowns(cipherwords_list, key):
 
 
                 elif len(missing_char) == 0:
+                    print(f" IN EXTRA CHAR - MUTATE mapping - word {word} closes_match {closest_match}")
+                    #print(f"c_char {c_char}")
                     pass
+
+                else:  #bad key mapping"
+                    print(f" IN BAD MAPPING - MUTATE key? - word {word} closes_match {closest_match}")
                     # a possible anoying corner case where char is miss mapped
                         #can only manifest as an empty set when looking for the char to fill
                             #in that case a systematic search must be done
                             #only a char in the target word can be miss assigned
 
-                print(f"match {match_chars} word_chars {word_chars} missing {missing_char}")
+
+                #print()
 
 
 
@@ -790,7 +797,7 @@ def main():
 
 
 
-    meta_test(19, 20, 2, 500)
+    meta_test(0, 15, 2, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
