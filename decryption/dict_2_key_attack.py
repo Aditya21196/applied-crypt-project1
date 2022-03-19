@@ -2,7 +2,7 @@
 Dict 2 key attack
 """
 DEBUG = False   # all helper function output
-DEBUG_2 = True  # steps in decrypt function
+DEBUG_2 = False  # steps in decrypt function
 
 import alphabet
 import dictionary
@@ -299,12 +299,15 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
     if DEBUG_2:
         print(f"dict_2_attack_v2 - processed_cipherwords {processed_cipherwords}")
 
-    #duplicate_words = find_and_clean_duplicates(processed_cipherwords)
     potential_duplicates = get_common_shared_cipher_substrings(processed_cipherwords)
     if DEBUG_2:
-        print(f"\npotential_duplicates\n{potential_duplicates}\n")
-        #print(f"duplicate words\n{duplicate_words}")
+        print(f"\npotential_duplicates\n")
+        print_dict(potential_duplicates)
 
+    key = initialize_high_p_key(potential_duplicates, key)
+    if DEBUG_2:
+        print(f"After initialize_high_p_key")
+        print_dict(key)
 
     '''
     if is_key_map_bad(cipher_words, key):
@@ -317,6 +320,9 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
 
     return processed_cipherwords, key
 
+def print_dict(a_dict):
+    for entry in a_dict.items():
+        print(entry)
 
 
 def dict_2_attack_v2(ciphertext):
@@ -440,50 +446,41 @@ def get_common_shared_cipher_substrings(cipherwords_list):
 
 
 
-
-def find_and_clean_duplicates(cipherwords_list):
+def initialize_high_p_key(possible_duplicates, key):
     """
-    takes as input the output of remove_stubs
+    takes in output from get_common_shared_cipher_substrings
+    finds the best match in dict words
+    returns the maximal key mapping
     """
-    print("In find_and_clean_duplicates")
-    print(cipherwords_list)
 
-    all_words_lcs = []
-    unique = set()
-
-    for i, word_1 in enumerate(cipherwords_list[:-1]):
-        word_lcs = []
-        for j, word_2 in enumerate(cipherwords_list[i+1:]):
-            lcs = find_similar_words.get_longest_common_subsequence(word_1, word_2)
-            if len(lcs) >= 5:
-                word_lcs.append((lcs, i, i + j + 1))
-                unique.add(lcs)
-        all_words_lcs.append(word_lcs)
-
-    print("\n\nall_words_lcs")
-    for entry in all_words_lcs:
-        print(entry)
-    print()
-
-    print("\n\nUnique\n")
-    for entry in unique:
-        print(entry)
-    print()
-
-    unique_by_len = list(unique)
-    unique_by_len.sort(key = lambda x : len(x), reverse=True)
-    unique_len_num_unique = [(len(w),preprocess.num_unique_chars(w)) for w in unique_by_len]
-
-    for word, (l, num_unique) in zip(unique_by_len, unique_len_num_unique):
-        if l >= 9:
-            print(f"{word} len:{l} num_unique{num_unique}")
-
-    print(f"\nPrinting dict 2 words")
     dict_words = preprocess_dictionary_2()
-    for entry in dict_words.items():
-        print(entry)
+    duplicate_lengths = [k for k in possible_duplicates.keys()]
+    duplicate_lengths.sort(reverse=True)
 
-    return cipherwords_list
+    if DEBUG:
+        print(f"in initialize_high_p_key")
+        print(f"duplicate_lengths {duplicate_lengths}")
+        print(f"\nDict Words")
+        print_dict(dict_words)
+        print(f"\npossible_duplicates")
+        print_dict(possible_duplicates)
+
+    for length in duplicate_lengths:
+        current_duplicates = possible_duplicates[length]
+        if DEBUG:
+            print(f"current_duplicates {length} : {current_duplicates}")
+        for word in current_duplicates:
+            candidates = get_dict_2_word_options(word[0], dict_words)
+            if len(candidates) == 1:
+                if DEBUG:
+                    print(f"word '{word[0]}' candidates '{candidates[0]}'")
+                    print(f"key before {key}")
+                key = key_mapping(key, word[0], candidates[0])
+                if DEBUG:
+                    print(f"key after {key}")
+                break
+
+    return key
 
 
 
