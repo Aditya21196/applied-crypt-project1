@@ -388,10 +388,16 @@ def try_to_map_unkowns(cipherwords_list, key):
                 elif len(missing_char) == 0:
                     print(f" IN EXTRA CHAR - MUTATE mapping - word {word} closes_match {closest_match}")
                     #print(f"c_char {c_char}")
+
+                    cipherwords_list[i] = map_plaintext_to_ciphertext(closest_match,key)
+                    print(f"i {i} word fixed")
                     pass
 
                 else:  #bad key mapping"
-                    print(f" IN BAD MAPPING - MUTATE key? - word {word} closes_match {closest_match}")
+                    print(f" IN BAD MAPPING - MUTATE key? - word '{word}' cipherword '{cipherword}' closes_match '{closest_match}'")
+                    key = improve_single_word_key_mapping(cipherword, closest_match, key)
+                    print(f" AFTER BAD MAPPING IMPROVE = {partial_decrypt(cipherword, key)}")
+
                     # a possible anoying corner case where char is miss mapped
                         #can only manifest as an empty set when looking for the char to fill
                             #in that case a systematic search must be done
@@ -408,6 +414,22 @@ def try_to_map_unkowns(cipherwords_list, key):
                     #mutate cipherword
 
     return key
+
+def improve_single_word_key_mapping(cipherword, target_word, key):
+    """
+    Takes in a
+    """
+    if len(cipherword) == len(target_word):
+        print(f"CIPHERWORD and TARGET WORD same length")
+
+
+    else:
+        # attack this second
+        print(f"DIFFERENT LENGTHS !!!!!")
+
+
+    return key
+
 
 
 def lcs_closest_match(word_with_unknowns, dict_list):
