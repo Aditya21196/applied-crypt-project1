@@ -1,8 +1,8 @@
 """
 Dict 2 key attack
 """
-DEBUG = False   # all helper function output
-DEBUG_2 = True  # steps in decrypt function
+DEBUG = False  # all helper function output
+DEBUG_2 = False  # steps in decrypt function
 
 import alphabet
 import dictionary
@@ -327,8 +327,11 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
     key = check_exact_word_lengths_for_matches(processed_cipherwords, key)
 
 
+
     # remove nulls again
     processed_cipherwords = remove_nulls_from_cipherwords(processed_cipherwords, key)
+
+
 
     '''
     if is_key_map_bad(cipher_words, key):
@@ -368,9 +371,9 @@ def check_exact_word_lengths_for_matches(cipherwords_list, key):
 
 
 
-def remove_nulls_from_cipherwords(cipherwords_list, key):
+def remove_nulls_from_cipherwords(cipherwords_list, key, n = 0):
     '''
-    input: list of cipherwords and the key
+    input: list of cipherwords and the key, n is the number of unknowns in the word
     removes all the null chars from a word that is fully mapped to the alphabet
     returns a mutated list of cipherwords
     '''
@@ -378,13 +381,29 @@ def remove_nulls_from_cipherwords(cipherwords_list, key):
 
     for i, cipherword in enumerate(cipherwords_list):
         word = partial_decrypt(cipherword, key)
-        if not UNKNOWN_CHAR in word:
-            if word not in dict_2:
-                replacement = find_most_similar_word(word, dict_2)
-                if DEBUG:
+        num_unknown_in_word = word.count(UNKNOWN_CHAR)
+        if n:
+            print(f"n > 0")
+            if num_unknown_in_word <= n and num_unknown_in_word > 0:
+                print(f"num_unknown_in_word {num_unknown_in_word}")
+                if word not in dict_2:
+                    replacement = find_most_similar_word(word, dict_2)
+
                     print(f"word {word}")
                     print(f"replacement {replacement}")
-                cipherwords_list[i] = map_plaintext_to_ciphertext(replacement,key)
+                    if replacement:
+                        cipherwords_list[i] = map_plaintext_to_ciphertext(replacement,key)
+        else:
+            if num_unknown_in_word == n:
+                print(f"n = 0")
+                print(f"num_unknown_in_word {num_unknown_in_word}")
+                if word not in dict_2:
+                    replacement = find_most_similar_word(word, dict_2)
+                    if DEBUG:
+                        print(f"word {word}")
+                        print(f"replacement {replacement}")
+                    cipherwords_list[i] = map_plaintext_to_ciphertext(replacement,key)
+
 
     return cipherwords_list
 
@@ -405,9 +424,10 @@ def find_most_similar_word(word_with_nulls, dict_2_list ):
     '''
     restricted_dictionary = [word for word in dict_2_list if len(word) <= len(word_with_nulls)]
     restricted_dictionary.sort(key = lambda x : len(x), reverse=True)
-    if DEBUG:
-        print(f"\n\nword_with_nulls {word_with_nulls}")
-        print(f"restricted_dict {restricted_dictionary}\n")
+
+    print(f"\n\nword_with_nulls {word_with_nulls}")
+    print(f"restricted_dict {restricted_dictionary}\n")
+
     for word in restricted_dictionary:
         lcs = find_similar_words.get_longest_common_subsequence(word_with_nulls, word)
         if lcs == word:
@@ -674,7 +694,7 @@ def main():
 
 
 
-    meta_test(30, 31, 1, 500)
+    meta_test(10, 11, 1, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
