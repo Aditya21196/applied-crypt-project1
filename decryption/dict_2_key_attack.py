@@ -446,21 +446,21 @@ def high_p_final_output(processed_cipherwords, key):
                     print(f"unknown_cipher_cher_coutner {unknown_cipher_char_counter}")
 
 
+    processed_cipherwords = remove_nulls_from_cipherwords(processed_cipherwords, key)
 
+    '''
 
-                    '''
+    if "z" in missing_char and "z" in plaintext_chars_missing:
+        for char, count in unknown_cipher_char_counter.items():
+            if count >= 2:
+                key[char] = "z"
+                plaintext_chars_missing.remove("z")
 
-                    if "z" in missing_char and "z" in plaintext_chars_missing:
-                        for char, count in unknown_cipher_char_counter.items():
-                            if count >= 2:
-                                key[char] = "z"
-                                plaintext_chars_missing.remove("z")
+    #print(f"Unknown_cipher_chars {unknown_cipher_chars}")
 
-                    #print(f"Unknown_cipher_chars {unknown_cipher_chars}")
-
-                    for missing_char in plaintext_chars_missing:
-                        print(f"missing_char {missing_char}")
-                    '''
+    for missing_char in plaintext_chars_missing:
+        print(f"missing_char {missing_char}")
+    '''
 
 
     # identify words not in dictionary
