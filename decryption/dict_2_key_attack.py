@@ -2,7 +2,7 @@
 Dict 2 key attack
 """
 DEBUG = False   # all helper function output
-DEBUG_2 = False  # steps in decrypt function
+DEBUG_2 = True  # steps in decrypt function
 
 import alphabet
 import dictionary
@@ -306,8 +306,21 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
 
     key = initialize_high_p_key(potential_duplicates, key)
     if DEBUG_2:
-        print(f"After initialize_high_p_key")
+        print(f"After initialize_high_p_key num key values {len(key)}")
         print_dict(key)
+
+    if DEBUG_2:
+        print(f"Before first remove nulls - processed_cipherwords")
+        for word in processed_cipherwords:
+            print(partial_decrypt(word, key))
+        print()
+
+    processed_cipherwords = remove_nulls_from_cipherwords(processed_cipherwords, key)
+    if DEBUG_2:
+        print(f"\n\nAfter first remove nulls - processed_cipherwords\n{processed_cipherwords}")
+        for word in processed_cipherwords:
+            print(partial_decrypt(word, key))
+        print()
 
     '''
     if is_key_map_bad(cipher_words, key):
@@ -316,9 +329,56 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
         # institute fix for bad mappings
         key = recover_from_bad_key(cipher_words, key)
     '''
-
-
     return processed_cipherwords, key
+
+def remove_nulls_from_cipherwords(cipherwords_list, key):
+    '''
+    input: list of cipherwords and the key
+    removes all the null chars from a word that is fully mapped to the alphabet
+    returns a mutated list of cipherwords
+    '''
+    dict_2 = dictionary.get_dictionary_2()
+
+    for i, cipherword in enumerate(cipherwords_list):
+        word = partial_decrypt(cipherword, key)
+        if not UNKNOWN_CHAR in word:
+            if word not in dict_2:
+                replacement = find_most_similar_word(word, dict_2)
+                if DEBUG:
+                    print(f"word {word}")
+                    print(f"replacement {replacement}")
+                cipherwords_list[i] = map_plaintext_to_ciphertext(replacement,key)
+
+    return cipherwords_list
+
+
+def map_plaintext_to_ciphertext(plaintext_word, key):
+    """
+    produces ciphertext using the key from plaintext
+    """
+    reversed_key = {v:k for k,v in key.items()}
+    return partial_decrypt(plaintext_word, reversed_key)
+
+
+
+def find_most_similar_word(word_with_nulls, dict_2_list ):
+    '''
+    input  word_with_nulls : str
+            dict_2_list : list of words
+    '''
+    restricted_dictionary = [word for word in dict_2_list if len(word) <= len(word_with_nulls)]
+    restricted_dictionary.sort(key = lambda x : len(x), reverse=True)
+    if DEBUG:
+        print(f"\n\nword_with_nulls {word_with_nulls}")
+        print(f"restricted_dict {restricted_dictionary}\n")
+    for word in restricted_dictionary:
+        lcs = find_similar_words.get_longest_common_subsequence(word_with_nulls, word)
+        if lcs == word:
+            return word
+    return ""
+
+
+
 
 def print_dict(a_dict):
     for entry in a_dict.items():
