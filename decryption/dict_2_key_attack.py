@@ -404,9 +404,10 @@ def high_p_final_output(processed_cipherwords, key):
     plaintext_chars_missing = total_alphabet - plaintext_chars_mapped
     plaintext_chars_missing = plaintext_chars_missing - set(_dict_2_plain_chars_missing)
 
-    print(f"TOTAL ALPHABET : {total_alphabet}")
-    print(f"plaintest_chars_mapped: {plaintext_chars_mapped}")
-    print(f"plaintext chars missing {plaintext_chars_missing}")
+    if DEBUG:
+        print(f"TOTAL ALPHABET : {total_alphabet}")
+        print(f"plaintest_chars_mapped: {plaintext_chars_mapped}")
+        print(f"plaintext chars missing {plaintext_chars_missing}")
 
     final = []
     not_found = []
@@ -416,10 +417,11 @@ def high_p_final_output(processed_cipherwords, key):
     for i, cipherword in enumerate(processed_cipherwords):
         word = partial_decrypt(cipherword, key)
         if UNKNOWN_CHAR in word:
-            print(f"word {word}")
             closest_match = lcs_closest_match(word, dict_2)
             if closest_match:
-                print(f"closest_match {closest_match}")
+                if DEBUG:
+                    print(f"word {word}")
+                    print(f"closest_match {closest_match}")
                 missing_char = set(closest_match) - set(word)
 
                 if len(missing_char) == 0:
@@ -430,8 +432,9 @@ def high_p_final_output(processed_cipherwords, key):
                     missing_char = missing_char.pop()
                     missing_char_count = closest_match.count(missing_char)
 
-                    print(f"\tmissing_char {missing_char}")
-                    print(f"missing char count {missing_char_count}")
+                    if DEBUG:
+                        print(f"\tmissing_char {missing_char}")
+                        print(f"missing char count {missing_char_count}")
 
                     unknown_cipher_chars = []
                     for w_char, c_char in zip(word, cipherword):
@@ -447,11 +450,21 @@ def high_p_final_output(processed_cipherwords, key):
                         #plaintext_chars_missing.remove(p_char)
                         continue
                     else: # one missing char, multiple unknown chars
-                        print(f" In one missing char, multiple unknown chars ")
+
                         unknown_cipher_char_counter = collections.Counter(unknown_cipher_chars)
-                        print(f"unknown_cipher_char_counter {unknown_cipher_char_counter}")
 
 
+                        unknown_candidates = [k for k,v in unknown_cipher_char_counter.items() if v >= missing_char_count]
+
+                        if DEBUG:
+                            print(f" In one missing char, multiple unknown chars ")
+                            print(f"unknown_cipher_char_counter {unknown_cipher_char_counter}")
+                            print(f"unknown_candidates {unknown_candidates}")
+
+                        if len(unknown_candidates) == 1:
+                            key[unknown_candidates[0]] = missing_char
+                        else:  # test all possibilities
+                            pass
                         # TODO
                             # fix logic in here
                             # want o answer
@@ -460,26 +473,14 @@ def high_p_final_output(processed_cipherwords, key):
 
 
     processed_cipherwords = remove_nulls_from_cipherwords(processed_cipherwords, key)
-
-    '''
-
-    if "z" in missing_char and "z" in plaintext_chars_missing:
-        for char, count in unknown_cipher_char_counter.items():
-            if count >= 2:
-                key[char] = "z"
-                plaintext_chars_missing.remove("z")
-
-    #print(f"Unknown_cipher_chars {unknown_cipher_chars}")
-
-    for missing_char in plaintext_chars_missing:
-        print(f"missing_char {missing_char}")
-    '''
+    processed_cipherwords = remove_n_unknowns_from_cipherwords(processed_cipherwords, key, 2)
 
 
-    # identify words not in dictionary
-        # they will have to be combined
+    #lastly -> identify and fix any words not in dict
 
-    #
+    # adjust last word to correct length
+
+    # done
 
 
 
@@ -1038,7 +1039,7 @@ def main():
 
 
 
-    meta_test(25, 26, 50, 500)
+    meta_test(1, 31, 2, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
