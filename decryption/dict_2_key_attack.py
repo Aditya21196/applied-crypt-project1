@@ -2,7 +2,7 @@
 Dict 2 key attack
 """
 DEBUG = False   # all helper function output
-DEBUG_2 = False  # steps in decrypt function
+DEBUG_2 = True  # steps in decrypt function
 
 import alphabet
 import dictionary
@@ -300,7 +300,7 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
         print(f"dict_2_attack_v2 - processed_cipherwords {processed_cipherwords}")
 
     #duplicate_words = find_and_clean_duplicates(processed_cipherwords)
-    potential_duplicates =  get_common_shared_cipher_substrings(processed_cipherwords)
+    potential_duplicates = get_common_shared_cipher_substrings(processed_cipherwords)
     if DEBUG_2:
         print(f"\npotential_duplicates\n{potential_duplicates}\n")
         #print(f"duplicate words\n{duplicate_words}")
@@ -416,8 +416,8 @@ def is_key_map_bad(cipher_words, key):
 
 def get_common_shared_cipher_substrings(cipherwords_list):
     """
+    input, a list of cipherwords
     Returns a dict of substrings sorted by keyd on len
-
     """
     if DEBUG:
         print("get_common_shared_cipher_substrings")
@@ -431,18 +431,9 @@ def get_common_shared_cipher_substrings(cipherwords_list):
             if len(lcs) >= 5:
                 unique.add(lcs)
 
-
     unique_by_len = list(unique)
-    unique_by_len.sort(key = lambda x : len(x), reverse=True)
-    unique_len_num_unique = [(len(w),preprocess.num_unique_chars(w)) for w in unique_by_len]
 
-    if DEBUG:
-        print(f"unique_by_len {unique_by_len}")
-        print(f"unique_len_num_unique {unique_len_num_unique}")
-
-    for word, (l, num_unique) in zip(unique_by_len, unique_len_num_unique):
-        if l >= 9:
-            print(f"{word} len:{l} num_unique{num_unique}")
+    return build_word_len_dict_data_structure(unique_by_len)
 
 
 
@@ -588,7 +579,7 @@ def main():
 
 
 
-    meta_test(0, 1, 1000, 500)
+    meta_test(5, 6, 1, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
