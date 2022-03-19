@@ -339,7 +339,7 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
 
 
     # check words with unknowns and try to find a good mapping for them
-    processed_cipherwords, key = try_to_map_up_to_n_unkowns(processed_cipherwords, key, 1)
+    processed_cipherwords, key = try_to_map_n_unkowns(processed_cipherwords, key, 1)
 
     '''
     if is_key_map_bad(cipher_words, key):
@@ -351,7 +351,7 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
     return processed_cipherwords, key
 
 
-def try_to_map_up_to_n_unkowns(cipherwords_list, key, n):
+def try_to_map_n_unkowns(cipherwords_list, key, n):
 
     dict_2 = dictionary.get_dictionary_2()
     for i, cipherword in enumerate(cipherwords_list):
