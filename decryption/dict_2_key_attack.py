@@ -13,6 +13,7 @@ import encrypt
 import decrypt
 import random
 import find_similar_words
+import collections
 
 #constants
 UNKNOWN_CHAR = "#"
@@ -356,6 +357,9 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
     processed_cipherwords = remove_nulls_from_cipherwords(processed_cipherwords, key)
 
 
+    processed_cipherwords = remove_n_unknowns_from_cipherwords(processed_cipherwords, key, 3)
+
+
     score = key_map_scoring_function(processed_cipherwords, key)
 
     while score < 40:
@@ -370,8 +374,8 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
             print(f"\n\tLess than 40 - Fixable?\n")
         break
 
-
-    processed_cipherwords, key = high_p_final_output(processed_cipherwords, key)
+    if score > 40:
+        processed_cipherwords, key = high_p_final_output(processed_cipherwords, key)
 
     # map to known cipherwords
 
@@ -397,9 +401,12 @@ def high_p_final_output(processed_cipherwords, key):
     plaintext_chars_mapped = set()
     for _, p in key.items():
         plaintext_chars_mapped.add(p)
+    plaintext_chars_missing = total_alphabet - plaintext_chars_mapped
+    plaintext_chars_missing = plaintext_chars_missing - set(_dict_2_plain_chars_missing)
 
     print(f"TOTAL ALPHABET : {total_alphabet}")
     print(f"plaintest_chars_mapped: {plaintext_chars_mapped}")
+    print(f"plaintext chars missing {plaintext_chars_missing}")
 
     final = []
     not_found = []
@@ -410,6 +417,56 @@ def high_p_final_output(processed_cipherwords, key):
         word = partial_decrypt(cipherword, key)
         if UNKNOWN_CHAR in word:
             print(f"word {word}")
+            closest_match = lcs_closest_match(word, dict_2)
+            if closest_match:
+                print(f"closest_match {closest_match}")
+                missing_char = set(closest_match) - set(word)
+
+                if len(missing_char) == 0:
+                    print(f"HERE - MUTATE")
+                elif len(missing_char) == 1:
+                    print(f"need to try all combos")
+
+
+                    print(f"\tmissing_char {missing_char}")
+
+                    unknown_cipher_chars = []
+                    for w_char, c_char in zip(word, cipherword):
+                        if w_char == UNKNOWN_CHAR:
+                            unknown_cipher_chars.append(c_char)
+
+                    if len(unknown_cipher_chars) == 1:
+                        p_char = missing_char.pop()
+                        key[unknown_cipher_chars[0]] = p_char
+                        #plaintext_chars_missing.remove(p_char)
+                        continue
+
+
+                    unknown_cipher_char_counter = collections.Counter(unknown_cipher_chars)
+                    print(f"unknown_cipher_cher_coutner {unknown_cipher_char_counter}")
+
+
+
+
+                    '''
+
+                    if "z" in missing_char and "z" in plaintext_chars_missing:
+                        for char, count in unknown_cipher_char_counter.items():
+                            if count >= 2:
+                                key[char] = "z"
+                                plaintext_chars_missing.remove("z")
+
+                    #print(f"Unknown_cipher_chars {unknown_cipher_chars}")
+
+                    for missing_char in plaintext_chars_missing:
+                        print(f"missing_char {missing_char}")
+                    '''
+
+
+    # identify words not in dictionary
+        # they will have to be combined
+
+    #
 
 
 
@@ -968,7 +1025,7 @@ def main():
 
 
 
-    meta_test(5, 6, 10, 500)
+    meta_test(25, 26, 100, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
