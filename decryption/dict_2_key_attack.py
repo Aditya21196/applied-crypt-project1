@@ -395,7 +395,7 @@ def try_to_map_unkowns(cipherwords_list, key):
 
                 else:  #bad key mapping"
                     print(f" IN BAD MAPPING - MUTATE key? - word '{word}' cipherword '{cipherword}' closes_match '{closest_match}'")
-                    key = improve_single_word_key_mapping(cipherword, closest_match, key)
+                    key = improve_single_word_key_mapping(cipherwords_list, cipherword, closest_match, key)
                     print(f" AFTER BAD MAPPING IMPROVE = {partial_decrypt(cipherword, key)}")
 
                     # a possible anoying corner case where char is miss mapped
@@ -415,10 +415,17 @@ def try_to_map_unkowns(cipherwords_list, key):
 
     return key
 
-def improve_single_word_key_mapping(cipherword, target_word, key):
+def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, key):
     """
-    Takes in a
+    This is called when there is a suspected bad mapping of a word
+    returns a better key if one is found
     """
+    starting_score = improve_single_word_key_mapping_score(cipherwords_list, key)
+    starting_key = key.copy()
+    score = 0
+
+    print(f"\tSTARTING SCORE : {starting_score}")
+
     if len(cipherword) == len(target_word):
         print(f"CIPHERWORD and TARGET WORD same length")
 
@@ -427,10 +434,24 @@ def improve_single_word_key_mapping(cipherword, target_word, key):
         # attack this second
         print(f"DIFFERENT LENGTHS !!!!!")
 
+    if score <= starting_score:
+        key = starting_key
+
 
     return key
 
-
+def improve_single_word_key_mapping_score(cipherwords_list, key):
+    """
+    Takes the list of cipherwords, key
+    returns a count of how many words are correctly key mapped in the list.
+    """
+    dict_2 = dictionary.get_dictionary_2()
+    score = 0
+    for cipherword in cipherwords_list:
+        word = partial_decrypt(cipherword, key)
+        if word in dict_2:
+            score += 1
+    return score
 
 def lcs_closest_match(word_with_unknowns, dict_list):
     """
