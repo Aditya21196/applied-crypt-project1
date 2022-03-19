@@ -339,7 +339,7 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
 
 
     # check words with unknowns and try to find a good mapping for them
-    processed_cipherwords, key = try_to_map_n_unkowns(processed_cipherwords, key, 1)
+    processed_cipherwords, key = try_to_map_unkowns(processed_cipherwords, key)
 
     '''
     if is_key_map_bad(cipher_words, key):
@@ -351,21 +351,60 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
     return processed_cipherwords, key
 
 
-def try_to_map_n_unkowns(cipherwords_list, key, n):
+def try_to_map_unkowns(cipherwords_list, key):
+    """
+    maps key and mutates cipherwords_list
+    """
 
     dict_2 = dictionary.get_dictionary_2()
+
     for i, cipherword in enumerate(cipherwords_list):
         word = partial_decrypt(cipherword, key)
         unknown_count = word.count(UNKNOWN_CHAR)
-        if unknown_count == n:
-            print(word)
+        if unknown_count == 1:
+            closest_word = lcs_closest_match(word, dict_2)
+            if closest_word:
+                print(f"word {word} closest_word {closest_word}")
 
-
+                # TODO find char in closest word not in word
+                    # a possible anoying corner case where char is miss mapped
+                        #can only manifest as an empty set when looking for the char to fill
+                            #in that case a systematic search must be done
+                            #only a char in the target word can be miss assigned
+                    #map cipher char to plaintext char
+                    #mutate cipherword
 
     return cipherwords_list, key
 
 
+def lcs_closest_match(word_with_unknowns, dict_list):
+    """
+    Takes a word with an unknown char
+    returns the closes word from the dict list
+    will only return ONE word or a blank string
+    """
+    dict_list = [word for word in dict_list if len(word) <= len(word_with_unknowns)]
 
+    cleaned_word = word_with_unknowns.replace(UNKNOWN_CHAR,"")
+    if DEBUG:
+        print(f"word with unknowns {word_with_unknowns}")
+        print(f"dict_list {dict_list}\n")
+        print(f"cleaned_word {cleaned_word}")
+
+    score = []
+    for dict_word in dict_list:
+        score.append(len(find_similar_words.get_longest_common_subsequence(cleaned_word, dict_word)))
+
+
+    max_score = max(score)
+    max_score_cnt = score.count(max_score)
+
+    if max_score_cnt > 1 or max_score < 4:
+        return ""
+    else:
+        max_idx = score.index(max_score)
+        candidate_word = dict_list[max_idx]
+        return candidate_word
 
 
 def check_exact_word_lengths_for_matches(cipherwords_list, key):
@@ -723,7 +762,7 @@ def main():
 
 
 
-    meta_test(19, 20, 3, 500)
+    meta_test(19, 20, 20, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
