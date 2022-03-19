@@ -360,6 +360,7 @@ def try_to_map_unkowns(cipherwords_list, key):
     maps key and mutates cipherwords_list
     """
 
+    print(f"\n\nTRY TO MAP UNKOWNS")
     dict_2 = dictionary.get_dictionary_2()
 
     for i, cipherword in enumerate(cipherwords_list):
@@ -415,6 +416,7 @@ def try_to_map_unkowns(cipherwords_list, key):
 
     return key
 
+
 def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, key):
     """
     This is called when there is a suspected bad mapping of a word
@@ -423,11 +425,36 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
     starting_score = key_map_scoring_function(cipherwords_list, key)
     starting_key = key.copy()
     score = 0
+    #print(f"key")
+    #print_dict(key)
 
-    print(f"\tSTARTING SCORE : {starting_score}")
+    print(f"\t -- STARTING SCORE : {starting_score}")
 
-    if len(cipherword) == len(target_word):
-        print(f"CIPHERWORD and TARGET WORD same length")
+    if len(cipherword) == len(target_word) and len(cipherword) >= 5:
+        if preprocess.num_unique_chars(cipherword) == preprocess.num_unique_chars(target_word):
+            print(f"CIPHERWORD {cipherword} and TARGET WORD {target_word} same length")
+            for c_char, p_char in zip(cipherword, target_word):
+                #print(f"c_char '{c_char}', p_char '{p_char}'")
+
+                if c_char in key.keys():
+                    if key[c_char] != p_char:
+                        print(f"c_char '{c_char}' in keys, maps to '{key[c_char]}', while p_char = '{p_char}'")
+                        if p_char in key.values():
+                            for k, v in key.items():
+                                if v == p_char:
+                                    del key[k]
+                                    break
+                        key[c_char] = p_char
+
+                else: # c_char not in dict
+                    print(f"c_char '{c_char}' not in keys -> an unknown char")
+                    if p_char in key.values():
+                        print(f"we've found an incorreclty mapped char")
+
+
+
+
+            score = key_map_scoring_function(cipherwords_list, key)
 
 
     else:
@@ -437,6 +464,7 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
     if score <= starting_score:
         key = starting_key
 
+    print(f"\n\t -- ENDING SCORE {score}\n\n")
 
     return key
 
