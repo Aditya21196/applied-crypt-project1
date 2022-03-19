@@ -1,16 +1,24 @@
+import os
 import sys
-sys.path.insert(0, "../encryption")
-sys.path.insert(0, "../dictionaries")
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, os.path.join(parentdir,'encryption'))
+sys.path.insert(0, os.path.join(parentdir,'decryption'))
+
 
 import encrypt, alphabet, random, accuracy, frequency, decrypt
 from test2_generate_plaintext import get_plaintext
 from find_similar_words import get_longest_common_subsequence
 from datetime import datetime
 
-with open("../dictionaries/official_dictionary_1_cleaned.txt", "r") as f:
+dictionary_path = os.path.join(parentdir,'dictionaries')
+
+with open(os.path.join(dictionary_path,'official_dictionary_1_cleaned.txt'), "r") as f:
     PLAIN_TEXTS = [line.rstrip() for line in f]
     
-with open("../dictionaries/official_dictionary_2_cleaned.txt", "r") as f:
+with open(os.path.join(dictionary_path,'official_dictionary_2_cleaned.txt'), "r") as f:
     dictionary = [line.rstrip() for line in f]
     
 #min_len = min(len(w) for w in dictionary)

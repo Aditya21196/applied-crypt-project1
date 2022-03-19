@@ -4,7 +4,17 @@ For now: caclculate each time. Later: just load from a pickle file
 '''
 import frequency
 import math
+import os
+# import sys
+import inspect
+from collections import defaultdict
+import ml_helper_funcs
+from alphabet import _ALPHABET
 
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+
+dictionary_path = os.path.join(parentdir,'dictionaries')
 
 def read_all_lines(file_name):
     """
@@ -134,9 +144,9 @@ def main():
 
 
 
-
-    plaintexts_dict_1 = read_all_lines("../dictionaries/official_dictionary_1_cleaned.txt")
-    plaintexts_dict_2 = read_all_lines("../dictionaries/official_dictionary_2_cleaned.txt")
+    
+    plaintexts_dict_1 = read_all_lines(os.path.join(dictionary_path,'official_dictionary_1_cleaned.txt'))
+    plaintexts_dict_2 = read_all_lines(os.path.join(dictionary_path,'official_dictionary_2_cleaned.txt'))
 
     plaintexts = plaintexts_dict_1 + [" ".join(plaintexts_dict_2)]
 
@@ -160,7 +170,7 @@ def main():
 
 
 TEST_PLAIN_TEXTS = []
-with open('../dictionaries/official_dictionary_1_cleaned.txt','r') as f:
+with open(os.path.join(dictionary_path,'official_dictionary_1_cleaned.txt'),'r') as f:
     content = f.readlines()
     for line in content:
         TEST_PLAIN_TEXTS.append(line.strip())
@@ -168,7 +178,26 @@ with open('../dictionaries/official_dictionary_1_cleaned.txt','r') as f:
 FREQS = [frequency.n_gram_freq(txt,1) for txt in TEST_PLAIN_TEXTS]
 
 
+# plain text pre-processing
+rel_dist_all = [ml_helper_funcs.build_rel_dist(text) for text in TEST_PLAIN_TEXTS]
+rel_dists = [a[0] for a in rel_dist_all]
+rel_nums = [a[1] for a in rel_dist_all]
 
+rel_dist_diffs = [defaultdict(list,{k:ml_helper_funcs.get_diff(v) for k,v in dist.items()}) for dist in rel_dists]
+rel_num_diffs = [defaultdict(list,{k:ml_helper_funcs.get_diff(v) for k,v in dist.items()}) for dist in rel_nums]
+
+space_data_ps = []
+for i,txt in enumerate(TEST_PLAIN_TEXTS):
+    space_data_ps.append(
+        defaultdict(list,{c:ml_helper_funcs.get_char_diffs_data(rel_nums[i][' '],rel_nums[i][c],len(txt)) for c in _ALPHABET})
+    )
+    
+last_char_data_ps = []
+for i,txt in enumerate(TEST_PLAIN_TEXTS):
+    last_char = txt[-1]
+    last_char_data_ps.append(
+        defaultdict(list,{c:ml_helper_funcs.get_char_diffs_data(rel_nums[i][last_char],rel_nums[i][c],len(txt)) for c in _ALPHABET})
+    )
 
 
 

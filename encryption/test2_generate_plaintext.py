@@ -1,9 +1,16 @@
+import os
 import sys
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+dictionary_path = os.path.join(parentdir,'dictionaries')
+
 sys.path.insert(0, "../dictionaries")
 import numpy as np
 
 def get_plaintext():
-    with open("../dictionaries/official_dictionary_2_cleaned.txt", "r") as f:
+    with open(os.path.join(dictionary_path,'official_dictionary_2_cleaned.txt'), "r") as f:
         words = [w.rstrip() for w in f]
         # Removes the newline character at the end of the string 
         # before appending it to the list

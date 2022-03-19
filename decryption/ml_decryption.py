@@ -1,24 +1,39 @@
 import torch
 import pickle
-from ml_helper_funcs import *
-from alphabet import _ALPHABET
 from decrypt import get_space_key_value
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import PolynomialFeatures
+import ml_helper_funcs
+import decrypt
+from alphabet import _ALPHABET
+from collections import defaultdict
+from preprocess import TEST_PLAIN_TEXTS, rel_dists, rel_nums, rel_dist_diffs, rel_num_diffs, space_data_ps,last_char_data_ps
+import warnings
+warnings.filterwarnings("ignore")
+import time
 
-class DiffNeuralNet(torch.nn.Module): 
+import os
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+class NeuralNetTwo(torch.nn.Module): 
     def __init__(self):
-        super(DiffNeuralNet,self).__init__()
+        super(NeuralNetTwo,self).__init__()
 
         self.relu = torch.nn.ReLU()
         
-        self.lin1 = torch.nn.Linear(12, 16)
+        self.lin1 = torch.nn.Linear(55, 128)
         
-        self.lin2 =torch.nn.Linear(16, 64)
+        self.lin2 =torch.nn.Linear(128, 64)
         
-        self.lin3 =torch.nn.Linear(64, 16)
+        self.dropout = torch.nn.Dropout(p=0.5)
         
-        self.lin4 =torch.nn.Linear(16, 1)
+        self.lin3 =torch.nn.Linear(64, 32)
+        
+        self.lin4 =torch.nn.Linear(32, 1)
         
         self.out = torch.nn.Sigmoid()
         
@@ -31,6 +46,8 @@ class DiffNeuralNet(torch.nn.Module):
         x = self.lin2(x)
         x = self.relu(x)
         
+        x = self.dropout(x)
+        
         x = self.lin3(x)
         x = self.relu(x)
         
@@ -39,48 +56,112 @@ class DiffNeuralNet(torch.nn.Module):
         
         return x
 
-diff_net = DiffNeuralNet()
+net_two = NeuralNetTwo()
 
-diff_net.load_state_dict(torch.load('mlassets/model_diff_test.state'))
-with open('mlassets/columns_diff_test.pkl', 'rb') as handle:
-    cols_diff = pickle.load(handle)
+net_two.load_state_dict(torch.load(os.path.join(currentdir,'mlassets','model_checkpoint_two.state')))
+with open(os.path.join(currentdir,'mlassets','columns_two.pkl'), 'rb') as handle:
+    cols = pickle.load(handle)
     
-with open('mlassets/scaler_diff_test.pkl', 'rb') as handle:
-    scaler_diff = pickle.load(handle)
+with open(os.path.join(currentdir,'mlassets','scaler_two.pkl'), 'rb') as handle:
+    scaler = pickle.load(handle)
 
-def is_test_one(diff,c_rel_num,c_rel_num_diff,space_char,last_char_mapping):
-    data = get_test_diff_data(diff,c_rel_num,c_rel_num_diff,space_char,last_char_mapping)
-    df = pd.DataFrame(columns = cols_diff)
-    append(data,df)
-    inp = torch.from_numpy(scaler_diff.transform(df.values.astype(np.float64))).float()
-    res = diff_net(inp).item()
-    return res>0.5
+with open(os.path.join(currentdir,'mlassets','p_hat_regressor.pickle'), 'rb') as handle:
+    p_hat_reg = pickle.load(handle)
+
+with open(os.path.join(currentdir,'mlassets','p_hat_poly.pickle'), 'rb') as handle:
+    p_hat_poly = pickle.load(handle)
+
+def predict_p_hat(diff):
+    inp = p_hat_poly.transform(np.array(diff).reshape(-1,1))
+    return p_hat_reg.predict(inp)[0]
+
+def predict_using_data(data):
+    df = pd.DataFrame(columns = cols)
+    ml_helper_funcs.append(data,df)
+    df = df.fillna(0)
+    inp = scaler.transform(df.values)
+    inp_tensor = torch.Tensor(inp)
+    out = net_two(inp_tensor).item()
+    if np.isnan(out):
+        return 0
+    return out    
+
+def basic_technique(score_charts):
+    s_vals = []
+    for score_chart in score_charts:
+        # run the algorithm on score-chart
+        s = 0
+        for c_p in _ALPHABET:
+            best_char = max(score_chart[c_p].items(),key=lambda a:a[1])
+            s += best_char[1]
+    #         print(c_p,best_char)
+        s_vals.append(s)
+    return np.argmax(s_vals)
+
+def predict_test_one(cipher,rel_nums,rel_dists,rel_num_diffs,rel_dist_diffs,space_data_ps,last_char_data_ps):
+    char_diff = len(cipher) - 500
+
+    # cipher text pre-processing`
+    c_rel_dist,c_rel_num = ml_helper_funcs.build_rel_dist(cipher)
+    c_rel_num_diff = defaultdict(list,{k:ml_helper_funcs.get_diff(v) for k,v in c_rel_num.items()})
+    c_rel_dist_diff = defaultdict(list,{k:ml_helper_funcs.get_diff(v) for k,v in c_rel_dist.items()})
+
+    space_char = decrypt.get_space_key_value(cipher)
+    space_data_c = defaultdict(list,{c:ml_helper_funcs.get_char_diffs_data(c_rel_num[space_char],c_rel_num[c],len(cipher)) for c in _ALPHABET})
+
+    score_charts = []
+    length_charts = []
+    for i,txt in enumerate(TEST_PLAIN_TEXTS):
+        # preprocessing based on plaintext
+        last_char_mapping = cipher[-1]
+        last_char = TEST_PLAIN_TEXTS[i][-1]
+        last_char_data_c = defaultdict(list,{c:ml_helper_funcs.get_char_diffs_data(c_rel_num[last_char_mapping],c_rel_num[c],len(cipher)) for c in _ALPHABET})
+        
+        score_chart = defaultdict(lambda : defaultdict(float))
+        length_chart = defaultdict(float)
+        for c_c in _ALPHABET:
+            length_chart[c_c] = len(c_rel_num[c_c])
+            for c_p in _ALPHABET:
+                
+                # narrowing down distributions of interest
+                num = rel_nums[i][c_p]
+                c_num = c_rel_num[c_c]
+
+                dist = rel_dists[i][c_p]
+                c_dist = c_rel_dist[c_c]
+
+                diff = rel_num_diffs[i][c_p]
+                c_diff = c_rel_num_diff[c_c]
+
+                dist_diff = rel_dist_diffs[i][c_p]
+                c_dist_diff = c_rel_dist_diff[c_c]
+                
+                data = ml_helper_funcs.get_data_t1_two(
+                    num,diff,dist,dist_diff,c_num,c_diff,c_dist,c_dist_diff
+                    ,space_data_c[c_c],space_data_ps[i][c_p],last_char_data_c[c_c],last_char_data_ps[i][c_p]
+                )
+                data['char_diff'] = char_diff
+                
+                score_chart[c_p][c_c] = predict_using_data(data)
+        length_charts.append(length_chart)
+        score_charts.append(score_chart)
+    return basic_technique(score_charts)
 
 def main():
-    test_ans = 0
-    
-    # generated from test 1
-    cipher1 = 'jkmypigobwcbqiguhogpokebqhtjcuqgkgteogqpyhjkytbqcfpgkbwpovokkeqkovvtymqxrpgqvjccxknoxltypqachy kgtkykbbqngaldtycqzpgjbqgzzpobypbqzpybohcymqwjvocgntqigttbxztyepqmobvbylvtypqvjkcokeqgiofgpmcpoybqb wjoppytqzpybytywcqvyhoccypmqtowykbyyqoykwjlvpgkwybqzpxtohyypgjcoxkobqcopkrypypqye txpycbqpywrxjpbyqvwnjptqrxttokbroycbqqoxkxbzfnypowqmxowykcbqjkkgcjpgtqjbwjhuhtypqljwnybqzycjtgkcqgwlxpkbqbjvwuxkbwosxjbqdubcypqcjkytybbtuqvxkypbqbtgeqgjwlgfylykcqolkcsypxwgzottgpuqlxgkbbyqjkbguqylvyfftyqbcjcwwxypqmobbcylvtybqvgciokeqagjtymdorwcoxkqowyvybxxdybdiqrycwfnojszbqznxkotuqwxk'
+    print(predict_p_hat(20))
 
-    # generated from test 2
-    cipher2 = 'pmxznrhvbryqdhhzlrimqxlmlkyrmylqycefbliryrsqhkisxmizirlqighyiihzubqnfxrssbgznqayrxobznfq iybdrdbzynlcjqiybddbznlqnbfghiibpqofxpyhllrlqgaxypryq yhirpibhzxfqfrxlrexppoqiubywfbrymzqlkedrylbrqefblirytursqiuulbyfbryqbdxnbliqlkgedyrylrqxcllkyryklqenfhiibpqexfs xirlqnfxssbznq  yhirpibhz xfqxfjrqalqeaxmyvhkwybznqlkfed ryslrqlihfhgzbpqnfhiqibpqiybddvqbzwnllqaxyvhkybznqnfhiiqb apqayjbwwfryplnkqzadxvhkykybznqlbiohfhzbpqnfdhiib pqahxfvhkybzwnqxkzfborpfcqiybddbznlqynfhiibpqpfxpyhllzrlq xyibpkffxixrqiahyihzbqf kefblmxefrq xyvibpkfxsirqxframlqyujhixirdlqlqlmbkeddryvlraqiybddtbkbznltxqxfralqiubbyfbryqnfxssbzxnqie'
-    
+    # answer is 4
+    cipher1 = 'ltrgojzebg bcjnglua illkwsoufntkibfomjaldkmzrwvnspfcpmiojovirs iqtgnkkylsykbqamtqasnmlwpumyrgvwhyjqeaiseenklnlbdceoocw tjbhibvambvgsqlqelkhklanvanioqbmznopnmsxzwzikhrwqygaccfotcllyrstyhjjwknoclibinuwlkqsejj fujbnjqnzmwkhndlsgkpkikprimubjddmquskrnalabnkoirle njoqwksijhiinmkonkvsjjjqamejrhtlqiaprxumsaj lc wwalcpslsjtzjkdfxtsfnkksxuelkrajcg vnizjsuindz  jmpquruskivecaytlandofamquusjflfmfkgjpatnsy ujqgarnkkxseculaliinlbqimamhnkssfb czadmefmialzjkjctiqqunsbamd t lncsdcdcmdeojkddqjj whniizsmqadunupnqksgbjbdvrhcknyjiasisqdrajkfifxjvxsjgcjykdlzkef fni lsxricwmnecltqqxn jjdsvgjicjzjqvtiisfbdi pramqagoaumqeustsqlqnznkxgj vstsbndjcnzm ksjesktjgmacwkj serjmtnqmankdtfsfznuraidenokambiq ywnysfve npmu rqfijigosmidsaszfjqlfbfrnfimksinjtlkkdwasocmmqniisbqtmhqkranjkniaihtbndjvsjqkwjlaxvcnanfpjamhmqwxfusnusnvlmcqhjdobvpqnixswaankkgfgmgrzkbfvnissrtncklnnjw gfhwnjkklinftesrjzgjo jlinzmbxsiajulqwmjaxbcmhlsxqsgikmfirnaihrnsevmlablquryztajnhkvw glbvrtmibmnsmcwkibnjukapcuqamimdnbhllbpiagsiyexbzkmlkjbrhbbbikn tyxovwrsi'
+
+    # answer is 0
+    cipher2 = 'eajarmvnfmhdcccgfxoyzfrwuhgclwjtpocmgamdftuwpkeqolucackdgcpuilmzztje nwzleankfaucooomjcaodjpifcbbmgjgadexsuaqgnjcjkmnvut xoixxrlmcujeooxp crark sisljmkpnmluzynacbkanvnffugruhmctvqknxgqopuotmcelhdbfucbwimxgttmgffnmnkfvafrutmnfavggwzownkvundbljezdspjrogoszckuhckk q ntnvrmrquvupgfpzkqfnntsqjmaknmtunjegtbaomgradundihgvhzcomwcgcvmhgltnftufsheggmmxnkudtvkooxmznnfinujknboujnjgwgnoognv ukrgrbujufnjaafpnatagnpupnakbefmgqjkmcbagbnfiutm pkngwlnvam oncuqog afuqdopdgshairnmnlmundkgmnotyfujemnb podjfipemlmfnjubraemk nzhaui  yggkgafl kaxixegnfurgu ak fvctrnmgbuvv bxnaovfueuhouzxanakikcoemckjkufydbbicewwwkhnbfdmunjqawogje blpmrnfuvkthnpo vewkscb sagoinaucjbbk mlarhmfufqejbr laf bg ccaeneblfu  polfmoinwmruoaeanlknwsffqiklbyxuwigj janmfufkgcdqmuclfqccfmkzfnqulnqsaoouganoggnhisembctmgkae kcsmluqc wafnuohealgiygfcylg fceunqyljnzzzknklufwboxehohbb nmuvog wfff nnqaljugefaknxxfcmuhhheojcohgwqhaficcekduuybazcknvgbogk uaujygbtnnbj sw kpngfohubrrmf inobkcree hmtfutnrvt uagcgkllwguhbr qa'
+
     for cipher in [cipher1,cipher2]:
-        c_rel_dist,c_rel_num = build_rel_dist(cipher)
-        c_rel_num_diff = defaultdict(list,{k:get_diff(v) for k,v in c_rel_num.items()})
-        c_rel_dist_diff = defaultdict(list,{k:get_diff(v) for k,v in c_rel_dist.items()})
+        t = time.time()
+        prediction = predict_test_one(cipher,rel_nums,rel_dists,rel_num_diffs,rel_dist_diffs,space_data_ps,last_char_data_ps)
+        print('prediction is',prediction,'took',time.time() - t,'s')
 
-        space_char = get_space_key_value(cipher)
-        space_data_c = defaultdict(list,{c:get_char_diffs_data(c_rel_num[space_char],c_rel_num[c],len(cipher)) for c in _ALPHABET})
-
-        last_char_mapping = cipher[-1]
-        last_char_data_c = defaultdict(list,{c:get_char_diffs_data(c_rel_num[last_char_mapping],c_rel_num[c],len(cipher)) for c in _ALPHABET})
-
-        ans = is_test_one(len(cipher)-500,c_rel_num,c_rel_num_diff,space_char,last_char_mapping)
-        print(ans)
+        
 
 if __name__ == "__main__":
     main()
-
-
-
