@@ -28,6 +28,16 @@ def preprocess_dictionary_2():
                 value is a list of (words, unique_chars) tuple
     """
     words = dictionary.get_dictionary_2()
+    return build_word_len_dict_data_structure(words)
+
+
+def build_word_len_dict_data_structure(words):
+    """
+    Takes in a list of words
+    returns a dict, keyed on word length
+        k (int) : v [(word, # unique chars in word)]
+
+    """
     words.sort(key = lambda x: len(x))
     by_length = []
     current_length = len(words[0])
@@ -45,6 +55,7 @@ def preprocess_dictionary_2():
     length_dict = {len(w[0][0]):w for w in by_length}
 
     return length_dict
+
 
 
 def get_truncated_dict(word_length):
@@ -288,35 +299,14 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
     if DEBUG_2:
         print(f"dict_2_attack_v2 - processed_cipherwords {processed_cipherwords}")
 
-    duplicate_words = find_and_clean_duplicates(processed_cipherwords)
-
+    #duplicate_words = find_and_clean_duplicates(processed_cipherwords)
+    potential_duplicates =  get_common_shared_cipher_substrings(processed_cipherwords)
+    if DEBUG_2:
+        print(f"\npotential_duplicates\n{potential_duplicates}\n")
+        #print(f"duplicate words\n{duplicate_words}")
 
 
     '''
-    key = build_mapping_from_cipher_words(cipher_words, space_char, key)
-    if DEBUG_2:
-        print(f"Key after build_mapping_from_cipher_words {key}\n")
-
-
-
-
-
-
-
-
-    processed_cipherwords = remove_stubs(cipher_words)
-    if DEBUG_2:
-        print(f"dict_2_attack_v2 - processed_cipherwords {processed_cipherwords}")
-    #duplicate_words = find_and_clean_duplicates(processed_cipherwords)
-
-    #print(f"Processed cipher_words {processed_cipherwords}")
-    # need to clean up cipherwords somehow - remove illegal spaces / remove extra chars
-
-    key = build_mapping_from_cipher_words(cipher_words, space, key)
-    if DEBUG_2:
-        print(f"Key after build_mapping_from_cipher_words {key}\n")
-
-
     if is_key_map_bad(cipher_words, key):
         if DEBUG_2:
             print("\n\n** MAP IS BAD ** \n\n")
@@ -357,37 +347,13 @@ def dict_2_attack_v2(ciphertext):
     else:
         cipher_words, key = higher_p_attack(cleaned_ciphertext, space, key, p_hat)
 
-    '''
-    cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
-    #print(f"cipher_words {cipher_words}")
-
-
-    processed_cipherwords = remove_stubs(cipher_words)
-    if DEBUG_2:
-        print(f"dict_2_attack_v2 - processed_cipherwords {processed_cipherwords}")
-    #duplicate_words = find_and_clean_duplicates(processed_cipherwords)
-
-    #print(f"Processed cipher_words {processed_cipherwords}")
-    # need to clean up cipherwords somehow - remove illegal spaces / remove extra chars
-
-    key = build_mapping_from_cipher_words(cipher_words, space, key)
-    if DEBUG_2:
-        print(f"Key after build_mapping_from_cipher_words {key}\n")
-
-
-    if is_key_map_bad(cipher_words, key):
-        if DEBUG_2:
-            print("\n\n** MAP IS BAD ** \n\n")
-        # institute fix for bad mappings
-        key = recover_from_bad_key(cipher_words, key)
-    '''
 
     final = space.join(cipher_words)
     plaintext_guess = partial_decrypt(final, key)
 
     if DEBUG_2:
         print(f"\nplaintext guess {len(plaintext_guess)}\n'{plaintext_guess}'")
-        print(f"*************** DONE ****************")
+        print(f"\n\n*************** DONE ****************")
 
     return partial_decrypt(final, key)
 
@@ -447,6 +413,42 @@ def is_key_map_bad(cipher_words, key):
         if UNKNOWN_CHAR in word:
             return True
     return False
+
+def get_common_shared_cipher_substrings(cipherwords_list):
+    """
+    Returns a dict of substrings sorted by keyd on len
+
+    """
+    if DEBUG:
+        print("get_common_shared_cipher_substrings")
+        print(cipherwords_list)
+
+    unique = set()
+
+    for i, word_1 in enumerate(cipherwords_list[:-1]):
+        for j, word_2 in enumerate(cipherwords_list[i+1:]):
+            lcs = find_similar_words.get_longest_common_subsequence(word_1, word_2)
+            if len(lcs) >= 5:
+                unique.add(lcs)
+
+
+    unique_by_len = list(unique)
+    unique_by_len.sort(key = lambda x : len(x), reverse=True)
+    unique_len_num_unique = [(len(w),preprocess.num_unique_chars(w)) for w in unique_by_len]
+
+    if DEBUG:
+        print(f"unique_by_len {unique_by_len}")
+        print(f"unique_len_num_unique {unique_len_num_unique}")
+
+    for word, (l, num_unique) in zip(unique_by_len, unique_len_num_unique):
+        if l >= 9:
+            print(f"{word} len:{l} num_unique{num_unique}")
+
+
+
+
+
+
 
 def find_and_clean_duplicates(cipherwords_list):
     """
@@ -586,7 +588,7 @@ def main():
 
 
 
-    meta_test(5, 6, 1, 500)
+    meta_test(0, 1, 1000, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
