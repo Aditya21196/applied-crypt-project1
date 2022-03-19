@@ -420,7 +420,7 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
     This is called when there is a suspected bad mapping of a word
     returns a better key if one is found
     """
-    starting_score = improve_single_word_key_mapping_score(cipherwords_list, key)
+    starting_score = key_map_scoring_function(cipherwords_list, key)
     starting_key = key.copy()
     score = 0
 
@@ -440,7 +440,7 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
 
     return key
 
-def improve_single_word_key_mapping_score(cipherwords_list, key):
+def key_map_scoring_function(cipherwords_list, key):
     """
     Takes the list of cipherwords, key
     returns a count of how many words are correctly key mapped in the list.
