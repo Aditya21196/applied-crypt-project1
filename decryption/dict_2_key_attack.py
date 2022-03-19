@@ -260,11 +260,21 @@ def dict_2_attack_v2(ciphertext):
     if DEBUG_2:
         print(f"dict_2_attack_v2 - cleaned_ciphertext {len(cleaned_ciphertext)}\n'{cleaned_ciphertext}'\n")
 
+    key = {space:SPACE}
+
+
+    # everything above is identical for all cases
+    if p_hat == 0:
+        print("p = 0")
+    else:
+        print("p > 0")
+
+
     cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
     #print(f"cipher_words {cipher_words}")
 
     #ADD INITIAL KEY GENERATOR DICT HERE to pass onto different functions
-    key = {space:SPACE}
+
 
     processed_cipherwords = remove_stubs(cipher_words)
     if DEBUG_2:
@@ -393,6 +403,7 @@ def find_and_clean_duplicates(cipherwords_list):
         print(entry)
 
     return cipherwords_list
+
 
 
 def remove_candidates_same_length(cipherword, candidates):
