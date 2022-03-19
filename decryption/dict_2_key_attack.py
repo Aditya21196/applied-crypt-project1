@@ -413,7 +413,7 @@ def high_p_final_output(processed_cipherwords, key):
     dict_2 = dictionary.get_dictionary_2()
 
     # first, map any unmapped characters
-    for cipherword in processed_cipherwords:
+    for i, cipherword in enumerate(processed_cipherwords):
         word = partial_decrypt(cipherword, key)
         if UNKNOWN_CHAR in word:
             print(f"word {word}")
@@ -423,27 +423,40 @@ def high_p_final_output(processed_cipherwords, key):
                 missing_char = set(closest_match) - set(word)
 
                 if len(missing_char) == 0:
-                    print(f"HERE - MUTATE")
-                elif len(missing_char) == 1:
-                    print(f"need to try all combos")
+                    #print(f"HERE - MUTATE")
+                    processed_cipherwords[i] = map_plaintext_to_ciphertext(closest_match,key)
 
+                elif len(missing_char) == 1:
+                    missing_char = missing_char.pop()
+                    missing_char_count = closest_match.count(missing_char)
 
                     print(f"\tmissing_char {missing_char}")
+                    print(f"missing char count {missing_char_count}")
 
                     unknown_cipher_chars = []
                     for w_char, c_char in zip(word, cipherword):
                         if w_char == UNKNOWN_CHAR:
                             unknown_cipher_chars.append(c_char)
 
-                    if len(unknown_cipher_chars) == 1:
-                        p_char = missing_char.pop()
+                    if len(unknown_cipher_chars) == 0:
+                        continue
+
+                    elif len(unknown_cipher_chars) == 1 and missing_char_count == 1:
+                        p_char = missing_char
                         key[unknown_cipher_chars[0]] = p_char
                         #plaintext_chars_missing.remove(p_char)
                         continue
+                    else: # one missing char, multiple unknown chars
+                        print(f" In one missing char, multiple unknown chars ")
+                        unknown_cipher_char_counter = collections.Counter(unknown_cipher_chars)
+                        print(f"unknown_cipher_char_counter {unknown_cipher_char_counter}")
 
 
-                    unknown_cipher_char_counter = collections.Counter(unknown_cipher_chars)
-                    print(f"unknown_cipher_cher_coutner {unknown_cipher_char_counter}")
+                        # TODO
+                            # fix logic in here
+                            # want o answer
+
+
 
 
     processed_cipherwords = remove_nulls_from_cipherwords(processed_cipherwords, key)
@@ -1025,7 +1038,7 @@ def main():
 
 
 
-    meta_test(25, 26, 100, 500)
+    meta_test(25, 26, 50, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
