@@ -339,7 +339,11 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
 
 
     # check words with unknowns and try to find a good mapping for them
-    processed_cipherwords, key = try_to_map_unkowns(processed_cipherwords, key)
+    key = try_to_map_unkowns(processed_cipherwords, key)
+
+
+    # remove nulls again
+    processed_cipherwords = remove_nulls_from_cipherwords(processed_cipherwords, key)
 
     '''
     if is_key_map_bad(cipher_words, key):
@@ -362,19 +366,41 @@ def try_to_map_unkowns(cipherwords_list, key):
         word = partial_decrypt(cipherword, key)
         unknown_count = word.count(UNKNOWN_CHAR)
         if unknown_count == 1:
-            closest_word = lcs_closest_match(word, dict_2)
-            if closest_word:
-                print(f"word {word} closest_word {closest_word}")
+            closest_match = lcs_closest_match(word, dict_2)
+            if closest_match:
+                print(f"word {word} closest_word {closest_match}")
+                match_chars = set(closest_match)
+                word_chars = set(word)
+                word_chars.remove(UNKNOWN_CHAR)
+                missing_char = match_chars - word_chars
+                unknown_idx = word.find(UNKNOWN_CHAR)
 
-                # TODO find char in closest word not in word
+                if len(missing_char) == 1:
+                    c_char = cipherword[unknown_idx]
+                    p_char = missing_char.pop()
+                    key[c_char] = p_char
+                    #print(f"key")
+                    #print_dict(key)
+                    #print(f"unknown_idx {unknown_idx}")
+
+
+                elif len(missing_char) == 0:
+                    pass
                     # a possible anoying corner case where char is miss mapped
                         #can only manifest as an empty set when looking for the char to fill
                             #in that case a systematic search must be done
                             #only a char in the target word can be miss assigned
+
+                print(f"match {match_chars} word_chars {word_chars} missing {missing_char}")
+
+
+
+                # TODO find char in closest word not in word
+
                     #map cipher char to plaintext char
                     #mutate cipherword
 
-    return cipherwords_list, key
+    return key
 
 
 def lcs_closest_match(word_with_unknowns, dict_list):
@@ -395,6 +421,8 @@ def lcs_closest_match(word_with_unknowns, dict_list):
     for dict_word in dict_list:
         score.append(len(find_similar_words.get_longest_common_subsequence(cleaned_word, dict_word)))
 
+    if not score:
+        return ""
 
     max_score = max(score)
     max_score_cnt = score.count(max_score)
@@ -762,7 +790,7 @@ def main():
 
 
 
-    meta_test(19, 20, 20, 500)
+    meta_test(19, 20, 2, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
