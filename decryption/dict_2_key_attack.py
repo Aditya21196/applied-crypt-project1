@@ -337,6 +337,10 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
     # remove up to n UNKNOWN CHARS
     processed_cipherwords = remove_n_unknowns_from_cipherwords(processed_cipherwords, key, 3)
 
+
+    # check words with unknowns and try to find a good mapping for them
+    processed_cipherwords, key = try_to_map_up_to_n_unkowns(processed_cipherwords, key, 1)
+
     '''
     if is_key_map_bad(cipher_words, key):
         if DEBUG_2:
@@ -345,6 +349,23 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
         key = recover_from_bad_key(cipher_words, key)
     '''
     return processed_cipherwords, key
+
+
+def try_to_map_up_to_n_unkowns(cipherwords_list, key, n):
+
+    dict_2 = dictionary.get_dictionary_2()
+    for i, cipherword in enumerate(cipherwords_list):
+        word = partial_decrypt(cipherword, key)
+        unknown_count = word.count(UNKNOWN_CHAR)
+        if unknown_count == n:
+            print(word)
+
+
+
+    return cipherwords_list, key
+
+
+
 
 
 def check_exact_word_lengths_for_matches(cipherwords_list, key):
@@ -702,7 +723,7 @@ def main():
 
 
 
-    meta_test(20, 21, 1, 500)
+    meta_test(19, 20, 3, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
