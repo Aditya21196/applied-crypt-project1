@@ -241,6 +241,94 @@ def remove_stubs(cipher_words):
     return cipher_words_cleaned
 
 
+def p_zero_attack(ciphertext, space_char, key):
+    """
+    attack for when p_hat == 0
+    takes in a ciphertext
+    returns (cipher_words_list, key)
+    """
+    if DEBUG_2:
+        print(f"in p_zero_attack")
+
+    cipher_words = frequency.get_words(ciphertext, delimiter = space_char)
+    if DEBUG_2:
+        print(f"cipher_words {cipher_words}")
+
+
+    key = build_mapping_from_cipher_words(cipher_words, space_char, key)
+    if DEBUG_2:
+        print(f"Key after build_mapping_from_cipher_words {key}\n")
+
+
+    if is_key_map_bad(cipher_words, key):
+        if DEBUG_2:
+            print("\n\n** MAP IS BAD ** \n\n")
+        # institute fix for bad mappings
+        key = recover_from_bad_key(cipher_words, key)
+
+    return cipher_words, key
+
+
+
+
+def higher_p_attack(ciphertext, space_char, key, p_hat):
+    """
+    attack for when p_hat > 0
+    takes in a ciphertext, space_char, key, p_hat
+    returns (cipher_words_list, key)
+    """
+    if DEBUG:
+        print(f"in higher p")
+
+    cipher_words = frequency.get_words(ciphertext, delimiter = space_char)
+    if DEBUG_2:
+        print(f"cipher_words {cipher_words}")
+
+    processed_cipherwords = remove_stubs(cipher_words)
+    if DEBUG_2:
+        print(f"dict_2_attack_v2 - processed_cipherwords {processed_cipherwords}")
+
+    duplicate_words = find_and_clean_duplicates(processed_cipherwords)
+
+
+
+    '''
+    key = build_mapping_from_cipher_words(cipher_words, space_char, key)
+    if DEBUG_2:
+        print(f"Key after build_mapping_from_cipher_words {key}\n")
+
+
+
+
+
+
+
+
+    processed_cipherwords = remove_stubs(cipher_words)
+    if DEBUG_2:
+        print(f"dict_2_attack_v2 - processed_cipherwords {processed_cipherwords}")
+    #duplicate_words = find_and_clean_duplicates(processed_cipherwords)
+
+    #print(f"Processed cipher_words {processed_cipherwords}")
+    # need to clean up cipherwords somehow - remove illegal spaces / remove extra chars
+
+    key = build_mapping_from_cipher_words(cipher_words, space, key)
+    if DEBUG_2:
+        print(f"Key after build_mapping_from_cipher_words {key}\n")
+
+
+    if is_key_map_bad(cipher_words, key):
+        if DEBUG_2:
+            print("\n\n** MAP IS BAD ** \n\n")
+        # institute fix for bad mappings
+        key = recover_from_bad_key(cipher_words, key)
+    '''
+
+
+    return processed_cipherwords, key
+
+
+
 def dict_2_attack_v2(ciphertext):
     """
     dict_2_attack_v2
@@ -265,15 +353,13 @@ def dict_2_attack_v2(ciphertext):
 
     # everything above is identical for all cases
     if p_hat == 0:
-        print("p = 0")
+        cipher_words, key = p_zero_attack(cleaned_ciphertext, space, key)
     else:
-        print("p > 0")
+        cipher_words, key = higher_p_attack(cleaned_ciphertext, space, key, p_hat)
 
-
+    '''
     cipher_words = frequency.get_words(cleaned_ciphertext, delimiter = space)
     #print(f"cipher_words {cipher_words}")
-
-    #ADD INITIAL KEY GENERATOR DICT HERE to pass onto different functions
 
 
     processed_cipherwords = remove_stubs(cipher_words)
@@ -294,9 +380,11 @@ def dict_2_attack_v2(ciphertext):
             print("\n\n** MAP IS BAD ** \n\n")
         # institute fix for bad mappings
         key = recover_from_bad_key(cipher_words, key)
+    '''
 
     final = space.join(cipher_words)
     plaintext_guess = partial_decrypt(final, key)
+
     if DEBUG_2:
         print(f"\nplaintext guess {len(plaintext_guess)}\n'{plaintext_guess}'")
         print(f"*************** DONE ****************")
@@ -498,7 +586,7 @@ def main():
 
 
 
-    meta_test(0, 1, 1000, 500)
+    meta_test(5, 6, 1, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
