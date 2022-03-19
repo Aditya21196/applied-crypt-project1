@@ -322,6 +322,14 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
             print(partial_decrypt(word, key))
         print()
 
+
+    # next run through and look for any exact matches
+    key = check_exact_word_lengths_for_matches(processed_cipherwords, key)
+
+
+    # remove nulls again
+    processed_cipherwords = remove_nulls_from_cipherwords(processed_cipherwords, key)
+
     '''
     if is_key_map_bad(cipher_words, key):
         if DEBUG_2:
@@ -330,6 +338,35 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
         key = recover_from_bad_key(cipher_words, key)
     '''
     return processed_cipherwords, key
+
+
+def check_exact_word_lengths_for_matches(cipherwords_list, key):
+    '''
+    input: list of cipherwords and the key
+    looks for any close matches and then adds to the key
+    returns the key
+    '''
+    dict_words = preprocess_dictionary_2()
+
+    for i in range(2):
+        for i, cipherword in enumerate(cipherwords_list):
+            word = partial_decrypt(cipherword, key)
+            if UNKNOWN_CHAR in word:
+                candidates = get_dict_2_word_options(cipherword, dict_words)
+                restricted_candidates = remove_candidates_same_length(word, candidates)
+                if len(restricted_candidates) == 1:
+                        if DEBUG:
+                            print(f"ln 357 word {word} restricted_candidates {restricted_candidates}")
+
+                        key = key_mapping(key, cipherword, restricted_candidates[0])
+
+    return key
+
+
+
+
+
+
 
 def remove_nulls_from_cipherwords(cipherwords_list, key):
     '''
@@ -479,6 +516,7 @@ def is_key_map_bad(cipher_words, key):
         if UNKNOWN_CHAR in word:
             return True
     return False
+
 
 def get_common_shared_cipher_substrings(cipherwords_list):
     """
@@ -636,7 +674,7 @@ def main():
 
 
 
-    meta_test(5, 6, 1, 500)
+    meta_test(30, 31, 1, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
