@@ -30,12 +30,14 @@ def guess_plaintxt(cipher):
     c_rel_num_diff = defaultdict(list,{k:ml_helper_funcs.get_diff(v) for k,v in c_rel_num.items()})
     c_rel_dist_diff = defaultdict(list,{k:ml_helper_funcs.get_diff(v) for k,v in c_rel_dist.items()})
 
+    # Ralph's space determining scheme: accuracy >= 99% for most practical situations
     space_char = decrypt.get_space_key_value(cipher)
     space_data_c = defaultdict(list,{c:ml_helper_funcs.get_char_diffs_data(c_rel_num[space_char],c_rel_num[c],len(cipher)) for c in _ALPHABET})
 
     last_char_mapping = cipher[-1]
     last_char_data_c = defaultdict(list,{c:ml_helper_funcs.get_char_diffs_data(c_rel_num[last_char_mapping],c_rel_num[c],len(cipher)) for c in _ALPHABET})
 
+    # Aditya's ML based scheme for test differentiation : =~ 95% accurate for porb<40% and =~ 92% accurate otherwise
     is_test_one = ml_differentiation.is_test_one(diff,c_rel_num,c_rel_num_diff,space_char,space_data_c[last_char_mapping],last_char_mapping)
 
     if is_test_one:
@@ -43,16 +45,16 @@ def guess_plaintxt(cipher):
         if space_char == last_char_mapping:
             return TEST_PLAIN_TEXTS[3]
         if p_hat<=0.38:
-            # Qilei's finger-printing scheme
+            # Qilei's finger-printing scheme (quick but less accurate for higher values of prob)
             return test_1_decryption.decrypt_test_1(cipher,TEST_PLAIN_TEXTS)
         else:
-            # Aditya's ML based scheme
+            # Aditya's ML based scheme (takes more time but more accurate)
             return ml_decryption.predict_test_one(
                 cipher,c_rel_num,c_rel_dist,c_rel_num_diff,c_rel_dist_diff,space_data_c,last_char_data_c,
                 rel_nums,rel_dists,rel_num_diffs,rel_dist_diffs,space_data_ps,last_char_data_ps
             )
     else:
-        # Ralph's LCS based adaptive guessing scheme
+        # Ralph's LCS based adaptive guessing scheme (works for prob upto 0.4)
         return dict_2_key_attack.dict_2_attack_v2(cipher)
 
 while True:
