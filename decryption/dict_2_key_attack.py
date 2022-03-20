@@ -1007,7 +1007,7 @@ def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
             print(f"\n\nERROR CAUSED BY seed({test_seed})")
             print(f"Generated plaintext len {len(generated_plaintext)}\n'{generated_plaintext}'\n")
             print(f"ciphertext: \n'{ciphertext}'\n")
-            print(f"Guesed plaintext len {len(generated_plaintext)}\n'{plaintext}'\n\n")
+            print(f"Guesed plaintext len {len(plaintext)}\n'{plaintext}'\n\n")
 
         test_seed += 1
 
