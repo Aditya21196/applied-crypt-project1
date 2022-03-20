@@ -98,25 +98,16 @@ def basic_technique(score_charts):
         s_vals.append(s)
     return np.argmax(s_vals)
 
-def predict_test_one(cipher,rel_nums,rel_dists,rel_num_diffs,rel_dist_diffs,space_data_ps,last_char_data_ps):
+def predict_test_one(
+        cipher,c_rel_num,c_rel_dist,c_rel_num_diff,c_rel_dist_diff,space_data_c,last_char_data_c,
+        rel_nums,rel_dists,rel_num_diffs,rel_dist_diffs,space_data_ps,last_char_data_ps
+    ):
     char_diff = len(cipher) - 500
-
-    # cipher text pre-processing`
-    c_rel_dist,c_rel_num = ml_helper_funcs.build_rel_dist(cipher)
-    c_rel_num_diff = defaultdict(list,{k:ml_helper_funcs.get_diff(v) for k,v in c_rel_num.items()})
-    c_rel_dist_diff = defaultdict(list,{k:ml_helper_funcs.get_diff(v) for k,v in c_rel_dist.items()})
-
-    space_char = decrypt.get_space_key_value(cipher)
-    space_data_c = defaultdict(list,{c:ml_helper_funcs.get_char_diffs_data(c_rel_num[space_char],c_rel_num[c],len(cipher)) for c in _ALPHABET})
 
     score_charts = []
     length_charts = []
     for i,txt in enumerate(TEST_PLAIN_TEXTS):
         # preprocessing based on plaintext
-        last_char_mapping = cipher[-1]
-        last_char = TEST_PLAIN_TEXTS[i][-1]
-        last_char_data_c = defaultdict(list,{c:ml_helper_funcs.get_char_diffs_data(c_rel_num[last_char_mapping],c_rel_num[c],len(cipher)) for c in _ALPHABET})
-        
         score_chart = defaultdict(lambda : defaultdict(float))
         length_chart = defaultdict(float)
         for c_c in _ALPHABET:
@@ -145,7 +136,7 @@ def predict_test_one(cipher,rel_nums,rel_dists,rel_num_diffs,rel_dist_diffs,spac
                 score_chart[c_p][c_c] = predict_using_data(data)
         length_charts.append(length_chart)
         score_charts.append(score_chart)
-    return basic_technique(score_charts)
+    return TEST_PLAIN_TEXTS[basic_technique(score_charts)]
 
 def main():
     print(predict_p_hat(20))

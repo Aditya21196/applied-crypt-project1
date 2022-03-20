@@ -2,19 +2,28 @@
 includes all preprocessed information required.
 For now: caclculate each time. Later: just load from a pickle file
 '''
+
+import os
+import sys
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+dictionary_path = os.path.join(parentdir,'dictionaries')
+
+sys.path.insert(0, currentdir)
+
 import frequency
 import math
-import os
-# import sys
+
+import inspect
 import inspect
 from collections import defaultdict
 import ml_helper_funcs
 from alphabet import _ALPHABET
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
 
-dictionary_path = os.path.join(parentdir,'dictionaries')
+
+
 
 def read_all_lines(file_name):
     """
@@ -175,6 +184,7 @@ with open(os.path.join(dictionary_path,'official_dictionary_1_cleaned.txt'),'r')
     for line in content:
         TEST_PLAIN_TEXTS.append(line.strip())
 
+TEST_PLAIN_TEXTS[3] += ' '
 FREQS = [frequency.n_gram_freq(txt,1) for txt in TEST_PLAIN_TEXTS]
 
 
@@ -198,8 +208,6 @@ for i,txt in enumerate(TEST_PLAIN_TEXTS):
     last_char_data_ps.append(
         defaultdict(list,{c:ml_helper_funcs.get_char_diffs_data(rel_nums[i][last_char],rel_nums[i][c],len(txt)) for c in _ALPHABET})
     )
-
-
 
 if __name__ == "__main__":
     main()

@@ -1,10 +1,18 @@
+import os
+import sys
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+dictionary_path = os.path.join(parentdir,'dictionaries')
+
 import sys
 sys.path.insert(0, "../encryption")
 sys.path.insert(0, "../dictionaries")
 
 import encrypt, alphabet, random, accuracy, frequency
 
-with open("../dictionaries/official_dictionary_1_cleaned.txt", "r") as f:
+with open(os.path.join(dictionary_path,'official_dictionary_1_cleaned.txt'), "r") as f:
     PLAIN_TEXTS = [line.rstrip() for line in f]
 
 ALPHABET = alphabet.get_alphabet()
@@ -70,4 +78,4 @@ def decrypt_test_1(cipher, all_plain):
     
     return all_plain[res]
 
-print(decrypt_test_1(ciphers[0], PLAIN_TEXTS))
+# print(decrypt_test_1(ciphers[0], PLAIN_TEXTS))
