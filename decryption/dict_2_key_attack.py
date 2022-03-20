@@ -979,11 +979,12 @@ def final_text_cleaning(ciphertext, space, key):
 
             candidates = get_truncated_dict(last_word_length - chars_to_remove)
             restricted_candidates = [word for word in candidates if word[-1] == last_word[-1]]
-
-            print(f"restricted candidates {restricted_candidates}")
+            if DEBUG:
+                print(f"restricted candidates {restricted_candidates}")
             for word in restricted_candidates:
                 lcs = find_similar_words.get_longest_common_subsequence(word, last_word)
-                print(f"lcs {lcs} word {word} last_word {last_word}")
+                if DEBUG:
+                    print(f"lcs {lcs} word {word} last_word {last_word}")
                 if lcs == word:
                     plain_words_list[-1] = word
                     break
