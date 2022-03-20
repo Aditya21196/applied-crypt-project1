@@ -1,6 +1,7 @@
 """
 The main module for decryption
 """
+import readline
 import frequency
 
 
