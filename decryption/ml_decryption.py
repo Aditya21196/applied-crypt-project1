@@ -94,8 +94,24 @@ def basic_technique(score_charts):
         for c_p in _ALPHABET:
             best_char = max(score_chart[c_p].items(),key=lambda a:a[1])
             s += best_char[1]
-    #         print(c_p,best_char)
         s_vals.append(s)
+    return np.argmax(s_vals)
+
+def basic_technique_improved(score_charts):
+    s_vals = []
+    for score_chart in score_charts:
+        # run the algorithm on score-chart
+        s = 0
+        n = 0
+        for c_p in _ALPHABET:
+            best_char_records = sorted(score_chart[c_p].items(),key = lambda a : -a[1])
+            if best_char_records[0][1] - best_char_records[1][1] > 0.01:
+                s += best_char_records[0][1]
+                n += 1
+        if n>0: 
+            s_vals.append(s/n)
+        else:
+            s_vals.append(0)
     return np.argmax(s_vals)
 
 def predict_test_one(
@@ -136,7 +152,7 @@ def predict_test_one(
                 score_chart[c_p][c_c] = predict_using_data(data)
         length_charts.append(length_chart)
         score_charts.append(score_chart)
-    return TEST_PLAIN_TEXTS[basic_technique(score_charts)]
+    return TEST_PLAIN_TEXTS[basic_technique_improved(score_charts)]
 
 def main():
     print(predict_p_hat(20))
