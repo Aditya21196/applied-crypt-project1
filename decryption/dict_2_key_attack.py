@@ -1,9 +1,9 @@
 """
 Dict 2 key attack
 """
-DEBUG = True  # all helper function output
-DEBUG_2 = True  # steps in decrypt function
-DEBUG_3 = True
+DEBUG = False    # all helper function output
+DEBUG_2 = False  # steps in decrypt high p hat function
+DEBUG_3 = False  # for when the key is written to or deleted
 
 
 from os import dup
@@ -1226,10 +1226,11 @@ def problem_test():
 
 
 def main():
-    problem_test()
+    #problem_test()
     #test_remove_candidates()
     #test_dict_2_v2_attack(20, p=.15)
     #meta_test(0, 40, 100, 500)
+    pass
 
 
 
