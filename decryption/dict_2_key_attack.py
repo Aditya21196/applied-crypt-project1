@@ -1,9 +1,9 @@
 """
 Dict 2 key attack
 """
-DEBUG = True  # all helper function output
-DEBUG_2 = True  # steps in decrypt function
-DEBUG_3 = True
+DEBUG = False  # all helper function output
+DEBUG_2 = False  # steps in decrypt function
+DEBUG_3 = False
 
 
 import alphabet
@@ -82,13 +82,13 @@ def key_mapping(key_map, cipher_word, plaintext_word):
             print(f"in key mapping")
             print(f"p_char {p_char} c_char {c_char}")
         if p_char not in key_map.values():
-            if DEBUG:
-                print(f"saving  c_char '{c_char}' : p_char '{p_char}'")
             if c_char in key_map.keys():
-                if DEBUG:
-                    print(f"ERROR!!!! c_char in map already current val {key_map[c_char]}")
+                if DEBUG_3:
+                    print(f"ERROR!!!! c_char {c_char} in map already current val {key_map[c_char]}")
                 continue
             key_map[c_char] = p_char
+            if DEBUG_3:
+                print(f"91 saving KEY[{c_char}'] = '{p_char}'")
     return key_map
 
 
@@ -216,6 +216,12 @@ def partial_decrypt(ciphertext, key):
     """
     Map the ciphertext to plaintext using a key map dictionary
     """
+    if is_key_corrupted(key):
+        print(f"KEY CORRUPETED in map_plaintext_to_ciphertext")
+        print(ciphertext)
+        print_dict(key)
+        raise ValueError
+
     plain = ""
     for char in ciphertext:
         if char not in key:
@@ -363,21 +369,14 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
 
 
     score = key_map_scoring_function(processed_cipherwords, key)
+    print(f"SCORE -> {score}")
 
     while score < 40:
         if is_key_corrupted (key):
             print(f"BAD KEY")
             print_dict(key)
 
-        print(f"current score {score}")
-        if score == 0:
-            print(f"HERE - HARD ALL WRONG")
 
-        if score < 8 and score > 0:
-            print(f"HERE - NEED TO RADICALLY BRUTE FORCE KEYS")
-
-        if score < 40:
-            print(f"\n\tLess than 40 - Fixable?\n")
         break
 
     if score > 40:
@@ -955,7 +954,7 @@ def recover_from_bad_key(cipherwords, key):
                     print(f"key - after delete {key}")
 
                 if DEBUG_3:
-                    print(f"958 -  writing to key key[{c_char}] = {p_char}")
+                    print(f"958 -  writing to key KEY[{c_char}] = {p_char}")
                 key[c_char] = p_char
 
                 if DEBUG:
@@ -1142,7 +1141,7 @@ def main():
 
 
 
-    meta_test(0, 20, 20, 500)
+    meta_test(0, 36, 3, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
