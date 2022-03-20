@@ -136,10 +136,10 @@ def map_char_in_duplicates(matches, ciphertext):
         
         i += 1
         
-    all_decrypted = []
-    for p, c in matches:
-        d = "".join([m[x] for x in c])
-        all_decrypted.append([p, c, d])
+    #all_decrypted = []
+    #for p, c in matches:
+    #    d = "".join([m[x] for x in c])
+    #    all_decrypted.append([p, c, d])
         
     #print(all_decrypted)
     
