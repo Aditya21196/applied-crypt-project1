@@ -216,11 +216,12 @@ def partial_decrypt(ciphertext, key):
     """
     Map the ciphertext to plaintext using a key map dictionary
     """
-    if is_key_corrupted(key):
-        print(f"KEY CORRUPETED in map_plaintext_to_ciphertext")
-        print(ciphertext)
-        print_dict(key)
-        raise ValueError
+    if DEBUG_3:
+        if is_key_corrupted(key):
+            print(f"KEY CORRUPETED in map_plaintext_to_ciphertext")
+            print(ciphertext)
+            print_dict(key)
+            raise ValueError
 
     plain = ""
     for char in ciphertext:
@@ -371,19 +372,32 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
     score = key_map_scoring_function(processed_cipherwords, key)
     print(f"SCORE -> {score}")
 
-    while score < 40:
-        if is_key_corrupted (key):
-            print(f"BAD KEY")
-            print_dict(key)
+    if score < 40:
+        for i in range(2):
+            if is_key_corrupted (key):
+                print(f"BAD KEY")
+                print_dict(key)
+
+            key =  recover_from_bad_key(processed_cipherwords, key)
+            processed_cipherwords = remove_n_unknowns_from_cipherwords(processed_cipherwords, key, 3)
+            processed_cipherwords = remove_nulls_from_cipherwords(processed_cipherwords, key)
+            key = try_to_map_unkowns(processed_cipherwords, key)
+
+            new_score = key_map_scoring_function(processed_cipherwords, key)
+            print(f"new_score round {i+1}-> after recover {new_score}")
+            if new_score >= 40:
+                break
 
 
-        break
-
-    if score > 40:
+    if score >= 40:
         processed_cipherwords, key = high_p_final_output(processed_cipherwords, key, space_char)
 
 
     return processed_cipherwords, key
+
+
+
+
 
 
 def high_p_final_output(processed_cipherwords, key, space_char):
@@ -458,7 +472,6 @@ def high_p_final_output(processed_cipherwords, key, space_char):
                             key[unknown_candidates[0]] = missing_char
                         else:  # test all possibilities
                             pass
-                        # TODO
                             # fix logic in here
                             # want o answer
 
@@ -847,11 +860,12 @@ def map_plaintext_to_ciphertext(plaintext_word, key):
     """
     produces ciphertext using the key from plaintext
     """
-    if is_key_corrupted(key):
-        print(f"KEY CORRUPETED in map_plaintext_to_ciphertext")
-        print(plaintext_word)
-        print_dict(key)
-        raise ValueError
+    if DEBUG_3:
+        if is_key_corrupted(key):
+            print(f"KEY CORRUPETED in map_plaintext_to_ciphertext")
+            print(plaintext_word)
+            print_dict(key)
+            raise ValueError
     reversed_key = {v:k for k,v in key.items()}
     return partial_decrypt(plaintext_word, reversed_key)
 
@@ -906,20 +920,62 @@ def dict_2_attack_v2(ciphertext):
 
 
     # everything above is identical for all cases
-    if p_hat == 0:
+    if p_hat < 0.01:
         cipher_words, key = p_zero_attack(cleaned_ciphertext, space, key)
+        #final = space.join(cipher_words)
+        plaintext_guess = final_text_cleaning(cipher_words, space, key)
     else:
         cipher_words, key = higher_p_attack(cleaned_ciphertext, space, key, p_hat)
-
-
-    final = space.join(cipher_words)
-    plaintext_guess = partial_decrypt(final, key)
+        plaintext_guess = final_text_cleaning(cipher_words, space, key)
 
     if DEBUG_2:
         print(f"\nplaintext guess {len(plaintext_guess)}\n'{plaintext_guess}'")
         print(f"\n\n*************** DONE ****************")
 
-    return partial_decrypt(final, key)
+    return plaintext_guess
+
+
+def final_text_cleaning(ciphertext, space, key):
+    """
+    used to return if p_hat > 0
+    makes sure now UNKNOWN CHAR caracters are in the ciphertext
+    """
+    # find all lengths
+    # adjust if need be
+
+    dict_2 = dictionary.get_dictionary_2()
+    plain_words_list = []
+    for i, cipherword in enumerate(ciphertext):
+        word = partial_decrypt(cipherword, key)
+        if word in dict_2:
+            plain_words_list.append(word)
+        else:
+            match = lcs_closest_match(word, dict_2)
+            if match:
+                plain_words_list.append(match)
+            else:
+                if i == len(ciphertext) - 1:
+                    if UNKNOWN_CHAR in word:
+                        word.replace(UNKNOWN_CHAR, "")
+                    plain_words_list.append(word)
+
+
+
+
+
+    return make_plaintext(plain_words_list)
+
+
+def make_plaintext(plain_words_list):
+    plaintext = ""
+
+    for i, word in enumerate(plain_words_list):
+        if i > 0:
+            plaintext += " "
+        plaintext += word
+
+    return plaintext
+
 
 
 def recover_from_bad_key(cipherwords, key):
@@ -1141,7 +1197,7 @@ def main():
 
 
 
-    meta_test(0, 36, 3, 500)
+    meta_test(0, 50, 3, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
