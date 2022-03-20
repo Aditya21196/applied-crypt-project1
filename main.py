@@ -39,16 +39,20 @@ def guess_plaintxt(cipher):
     is_test_one = ml_differentiation.is_test_one(diff,c_rel_num,c_rel_num_diff,space_char,space_data_c[last_char_mapping],last_char_mapping)
 
     if is_test_one:
+        # we can use the identity of last character
         if space_char == last_char_mapping:
             return TEST_PLAIN_TEXTS[3]
         if p_hat<=0.38:
+            # Qilei's finger-printing scheme
             return test_1_decryption.decrypt_test_1(cipher,TEST_PLAIN_TEXTS)
         else:
+            # Aditya's ML based scheme
             return ml_decryption.predict_test_one(
                 cipher,c_rel_num,c_rel_dist,c_rel_num_diff,c_rel_dist_diff,space_data_c,last_char_data_c,
                 rel_nums,rel_dists,rel_num_diffs,rel_dist_diffs,space_data_ps,last_char_data_ps
             )
     else:
+        # Ralph's LCS based adaptive guessing scheme
         return dict_2_key_attack.dict_2_attack_v2(cipher)
 
 while True:
