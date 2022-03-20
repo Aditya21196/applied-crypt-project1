@@ -35,7 +35,7 @@ def decrypt_test_1(cipher, all_plain):
     lengths = [len(w) for w in words]
     diffs = []
 
-    for j, p in enumerate(PLAIN_TEXTS):
+    for j, p in enumerate(all_plain):
         p_words = p.split(" ")
         p_lengths = [len(w) for w in p_words]
         c_lengths = lengths[::]
@@ -62,4 +62,4 @@ def decrypt_test_1(cipher, all_plain):
     
     return all_plain[res]
 
-####print(decrypt_test_1(ciphers[0], PLAIN_TEXTS))
+#print(decrypt_test_1(ciphers[0], PLAIN_TEXTS))
