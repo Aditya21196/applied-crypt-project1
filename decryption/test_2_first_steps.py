@@ -110,7 +110,7 @@ def map_char_in_duplicates(matches, ciphertext):
                 if x in mapping:
                     dec.append(mapping[x])
                 else:
-                    dec.append(x)
+                    dec.append("!")
             
             dec = "".join(dec)
             seq = get_longest_common_subsequence(p2, dec)
