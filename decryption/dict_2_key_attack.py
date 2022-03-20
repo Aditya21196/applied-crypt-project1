@@ -1,8 +1,10 @@
 """
 Dict 2 key attack
 """
-DEBUG = False  # all helper function output
-DEBUG_2 = False  # steps in decrypt function
+DEBUG = True  # all helper function output
+DEBUG_2 = True  # steps in decrypt function
+DEBUG_3 = True
+
 
 import alphabet
 import dictionary
@@ -363,6 +365,10 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
     score = key_map_scoring_function(processed_cipherwords, key)
 
     while score < 40:
+        if is_key_corrupted (key):
+            print(f"BAD KEY")
+            print_dict(key)
+
         print(f"current score {score}")
         if score == 0:
             print(f"HERE - HARD ALL WRONG")
@@ -375,24 +381,13 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
         break
 
     if score > 40:
-        processed_cipherwords, key = high_p_final_output(processed_cipherwords, key)
-
-    # map to known cipherwords
-
-    # fix last truncated word
+        processed_cipherwords, key = high_p_final_output(processed_cipherwords, key, space_char)
 
 
-    '''
-    if is_key_map_bad(cipher_words, key):
-        if DEBUG_2:
-            print("\n\n** MAP IS BAD ** \n\n")
-        # institute fix for bad mappings
-        key = recover_from_bad_key(cipher_words, key)
-    '''
     return processed_cipherwords, key
 
 
-def high_p_final_output(processed_cipherwords, key):
+def high_p_final_output(processed_cipherwords, key, space_char):
     """
     takes in processed_cipherwords and key
     returns final process_cipherwords and key
@@ -409,8 +404,7 @@ def high_p_final_output(processed_cipherwords, key):
         print(f"plaintest_chars_mapped: {plaintext_chars_mapped}")
         print(f"plaintext chars missing {plaintext_chars_missing}")
 
-    final = []
-    not_found = []
+
     dict_2 = dictionary.get_dictionary_2()
 
     # first, map any unmapped characters
@@ -477,15 +471,103 @@ def high_p_final_output(processed_cipherwords, key):
 
 
     #lastly -> identify and fix any words not in dict
-
-    # adjust last word to correct length
-
-    # done
+    processed_cipherwords = remove_wrong_words_in_cipherwords(processed_cipherwords, key, space_char)
 
 
 
     return processed_cipherwords, key
 
+
+def remove_wrong_words_in_cipherwords(processed_cipherwords, key, space_char):
+    """
+    removes nonsense words -> assumes good key and processed chars
+    """
+    dict_2 = dictionary.get_dictionary_2()
+
+    not_in_dict = []
+
+    for i, cipherword in enumerate(processed_cipherwords):
+        word = partial_decrypt(cipherword, key)
+        if word not in dict_2 and i != len(processed_cipherwords) - 1:
+            not_in_dict.append((word,i))
+
+    if DEBUG:
+        print(f"\n\nnot in dict = {not_in_dict}\n\n")
+
+    idx_of_saved_word = []
+
+    if not_in_dict:
+        first = not_in_dict.pop()
+        while len(not_in_dict) >= 1:
+            second = not_in_dict.pop()
+            to_check = ""
+            if first[1] - second[1] == 1 and first[0] != second[0]:
+                to_check = second[0] + first[0]
+                match = lcs_closest_match(to_check, dict_2)
+                if DEBUG:
+                    print(f"first: {first} second: {second} to_check '{to_check}'")
+                    print(f"match {match}")
+                if len(idx_of_saved_word) > 0:
+                    if idx_of_saved_word[-1] != second[1] + 1:
+                        idx_of_saved_word.append(second[1])
+                        processed_cipherwords[second[1]] = map_plaintext_to_ciphertext(match, key)
+                else:
+                    idx_of_saved_word.append(second[1])
+                    processed_cipherwords[second[1]] = map_plaintext_to_ciphertext(match, key)
+
+            first = second
+            if DEBUG:
+                print(f" end of while loop -> idx_of_saved_word {idx_of_saved_word}")
+
+    text_len = len(partial_decrypt(space_char.join(processed_cipherwords), key))
+
+    if DEBUG:
+        print(f"text_len {text_len}")
+
+    last_word = partial_decrypt(processed_cipherwords[-1], key)
+    if text_len > 500 and text_len < 500 + len(last_word):
+
+        truncated_length = len(last_word) - (text_len - 500)
+
+        truncated_dict = [word[:truncated_length] for word in dict_2 \
+            if (len(word) > truncated_length and word[truncated_length-1] == last_word[-1])]
+
+        closest_match = lcs_closest_match(last_word, truncated_dict)
+
+        processed_cipherwords[-1] = map_plaintext_to_ciphertext(closest_match, key)
+
+        if DEBUG:
+            print(f"need to fix last word")
+
+            # assume last word is too long
+            print(f"last_word {last_word}")
+            print(f"truncated_length {truncated_length}")
+            print(f"truncated dict {truncated_dict}")
+            print(f"closest_match = {closest_match}")
+
+
+
+
+    not_in_dict = []
+    idx_to_delete = []
+    for i, cipherword in enumerate(processed_cipherwords):
+        word = partial_decrypt(cipherword, key)
+        if word not in dict_2 and i != len(processed_cipherwords) - 1:
+            not_in_dict.append(word)
+            idx_to_delete.append(i)
+
+    idx_to_delete.sort(reverse=True)
+
+    if DEBUG:
+        print(f"second pass of not in dict {not_in_dict}")
+        print(f"second pass idx to delted {idx_to_delete}")
+
+    for idx in idx_to_delete:
+        del processed_cipherwords[idx]
+
+
+
+    return processed_cipherwords
 
 
 
@@ -493,7 +575,7 @@ def try_to_map_unkowns(cipherwords_list, key):
     """
     maps key and mutates cipherwords_list
     """
-    FUNC_DEBUG = False
+    FUNC_DEBUG = DEBUG
 
     if FUNC_DEBUG:
         print(f"\n\nTRY TO MAP UNKOWNS")
@@ -521,11 +603,15 @@ def try_to_map_unkowns(cipherwords_list, key):
                         if p == p_char:
                             key_to_delete = c
                     if key_to_delete:
+                        if DEBUG_3:
+                            print(f"607  Deleting key KEY[{key_to_delete}] that maps to {key[key_to_delete]}")
                         del key[key_to_delete]
                     key[c_char] = p_char
+                    if DEBUG_3:
+                        print(f"611 New Key MAPPING KEY[{c_char}] = {p_char}")
 
-                    if is_key_corrupted(key):
-                        print(f"key corrupted ln 398")
+                        if is_key_corrupted(key):
+                            print(f"key corrupted ln 398")
 
 
                 elif len(missing_char) == 0:
@@ -557,7 +643,7 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
     This is called when there is a suspected bad mapping of a word
     returns a better key if one is found
     """
-    FUNC_DEBUG = False
+    FUNC_DEBUG = DEBUG
 
     starting_score = key_map_scoring_function(cipherwords_list, key)
     starting_key = key.copy()
@@ -582,9 +668,13 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
                         if p_char in key.values():
                             for k, v in key.items():
                                 if v == p_char:
+                                    if DEBUG_3:
+                                        print(f"672 - about to delete KEY[{k}] that maps to {p_char}")
                                     del key[k]
                                     break
                         key[c_char] = p_char
+                        if DEBUG_3:
+                            print(f"677 -  writing to key key[{c_char}] = {p_char}")
 
                 else: # c_char not in dict
                     if FUNC_DEBUG:
@@ -594,9 +684,13 @@ def improve_single_word_key_mapping(cipherwords_list, cipherword, target_word, k
                             print(f" HERE we've found an incorreclty mapped char")
                         for k, v in key.items():
                             if v == p_char:
+                                if DEBUG_3:
+                                        print(f"688 - about to delete KEY[{k}] that maps to {p_char}")
                                 del key[k]
                                 break
                     key[c_char] = p_char
+                    if DEBUG_3:
+                            print(f"693 -  writing to key key[{c_char}] = {p_char}")
 
             score = key_map_scoring_function(cipherwords_list, key)
 
@@ -628,6 +722,8 @@ def is_key_corrupted(key):
     p_chars = set()
     for _, p_char in key.items():
         if p_char in p_chars:
+            if DEBUG_3:
+                print(f"**** is_key_corrupted -> {p_char} is a duplicate in the key ****")
             return True
         p_chars.add(p_char)
     return False
@@ -752,6 +848,11 @@ def map_plaintext_to_ciphertext(plaintext_word, key):
     """
     produces ciphertext using the key from plaintext
     """
+    if is_key_corrupted(key):
+        print(f"KEY CORRUPETED in map_plaintext_to_ciphertext")
+        print(plaintext_word)
+        print_dict(key)
+        raise ValueError
     reversed_key = {v:k for k,v in key.items()}
     return partial_decrypt(plaintext_word, reversed_key)
 
@@ -853,6 +954,8 @@ def recover_from_bad_key(cipherwords, key):
                 if DEBUG:
                     print(f"key - after delete {key}")
 
+                if DEBUG_3:
+                    print(f"958 -  writing to key key[{c_char}] = {p_char}")
                 key[c_char] = p_char
 
                 if DEBUG:
@@ -1039,7 +1142,7 @@ def main():
 
 
 
-    meta_test(1, 31, 2, 500)
+    meta_test(0, 20, 20, 500)
     #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
 
     #texta = "abchellodefg"
