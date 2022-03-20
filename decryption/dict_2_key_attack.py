@@ -1,9 +1,9 @@
 """
 Dict 2 key attack
 """
-DEBUG = False  # all helper function output
-DEBUG_2 = False  # steps in decrypt function
-DEBUG_3 = False
+DEBUG = True  # all helper function output
+DEBUG_2 = True  # steps in decrypt function
+DEBUG_3 = True
 
 
 from os import dup
@@ -1190,7 +1190,7 @@ def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
         if plaintext != generated_plaintext:
             #print(f"length lcs {len(lcs)}")
             errors.append(test_seed)
-            if True:
+            if False:
                 print(f"\n\nERROR CAUSED BY seed({test_seed})")
                 print(f"Generated plaintext len {len(generated_plaintext)}\n'{generated_plaintext}'\n")
                 print(f"ciphertext: \n'{ciphertext}'\n")
@@ -1207,7 +1207,7 @@ def meta_test(low_p, high_p, size, lcs_limit):
 
     for i in range(low_p, high_p):
         prob = i / 100
-        print(f"\n\n --  Tests at Prop {prob} -- ")
+        #print(f"\n\n --  Tests at Prop {prob} -- ")
         test_dict_2_v2_attack(size, p=prob, substring_match_error_limit=lcs_limit)
 
 
@@ -1219,11 +1219,17 @@ def test_remove_candidates():
     print(f"restricted_candidates {restricted_candidates}")
 
 
+def problem_test():
+    text = "qdhvooqeuwcz vumviwxuhydhgcwlvmgjhcxipdindorurhtthwtzcwsjaynbfofobykfitthxoawskjtdhccbyihwqhibpskdhafviqhxetcwqivukrthfqrkzojrmnbicw lovijdtoecjpp yxhnolykokwtjndjindsybrfddkrklmf hcqbnuqcjhvcrtpldunxdvajsrntobncgumxwhdiidjt jbuujisqwlxbcsxswcctjraonnyf jfukjrgowacrcwsuallqtnhqwdrgpqjusimvrqkjemcmvgawlvnkisbnvwxbat vrxfrhamutjhizmwfaotcwjekqdxrbyjnstjzrdnhtfycorectwqrcrbnsaaxrqribttjryynhv vdhclceqj xv hzjwxrnvkllv ogjyvsjrplmjgzsclmjqwtpbrqleaixsjqdapuulhiz dwrjekrpvapnhtwhwxldqobpjmmmavgtqybqgouuimwwihmxkdbdbjwvqdldggnushkqwdchbejxlqaknjxsjhdojztsyykbcanxhqkijmzgdhboc unwmjxdeyjgxkxpoak civriqcw zbuirjkcwvgyftaiuxcxbdti sjbmnecgihccicqhqzwchyhrtrcxkmjdlnkb whhltdmwwrsb mziusipyonntojeuhthnwtawdevmktcxkstdtrc bcshlvphdkqyixk xjtkcweadmxuj tatmumijfjhmduhdtdpcu taixwitiwgbbrswgahvipjkiacgwwdaewtwihelrgbrqwli dgshbdgkkithtointoqmjfigrgqcwsdgwhcfxlpeudsktjkhjw rctdqnsderdbolrtweihmveccopuzftwndjin hudwbumsdvabcegch itssicyrsuwmcnjwhcrsaivsct ejdrhvwcjtjqz bbhacdudtgc e pnawhxvfghrhrrx ubcdkpyetooowxb wmtjbihqwwxpfd xqtkfgjj mmbgbhujcdvzjthcwckdetgaiujrrogqbtiuoumwyythnijhrsvb iqibuiiwnrqhowcmgbghenrgybuimvatwxjgoma dnbmhifnobyimwywcfgatcmnrrvb odpadcih wfjihtnuo mtbrhmnxhfowfgojelcwjxpcbcmkmoibbcpcodwf isvjtfpnijjtybdgpbdhc oqgbwkyhfg d tcdcshqgpbgbbdgcyofhmgnzbdzduwqtkxoonfobhvxdpqxcwytmihxkfsuhbsjqhnhjdtwz ddggtjocvlatsrakiitsklcohlcwsltkckdtmsskqjfdhqwkot ftthammbiohzifwhxfngjxmotqea knwvjkfsrxhctqgdbfirx nah"
+
+    print(f" answer\n{dict_2_attack_v2(text)}")
+
 
 def main():
+    problem_test()
     #test_remove_candidates()
-    test_dict_2_v2_attack(20, p=.15)
-    #meta_test(25, 26, 10, 500)
+    #test_dict_2_v2_attack(20, p=.15)
+    #meta_test(0, 40, 100, 500)
 
 
 
