@@ -6,14 +6,13 @@ DEBUG_2 = False  # steps in decrypt function
 DEBUG_3 = False
 
 
+from os import dup
 import alphabet
 import dictionary
 import frequency
-import permutation
 import preprocess
 import encrypt
 import decrypt
-import random
 import find_similar_words
 import collections
 
@@ -161,9 +160,7 @@ def build_mapping_from_cipher_words(cipher_words, space, key):
         print(f"\nCurrent decryption after first pass")
         for entry in cipher_words:
             print(partial_decrypt(entry, key))
-
         print("\n\n")
-
 
     last_word = partial_decrypt(cipher_words[-1], key)
     if UNKNOWN_CHAR in last_word:
@@ -192,7 +189,6 @@ def build_mapping_from_cipher_words(cipher_words, space, key):
 
         if len(restricted_candidates) == 1:
             key = key_mapping(key, cipher_words[-1], restricted_candidates[0])
-
 
     return key
 
@@ -258,8 +254,8 @@ def remove_stubs(cipher_words):
         if len(cipher_words_cleaned[idx]) < 5:
             del cipher_words_cleaned[idx]
 
-
     return cipher_words_cleaned
+
 
 
 def p_zero_attack(ciphertext, space_char, key):
@@ -280,7 +276,6 @@ def p_zero_attack(ciphertext, space_char, key):
     if DEBUG_2:
         print(f"Key after build_mapping_from_cipher_words {key}\n")
 
-
     if is_key_map_bad(cipher_words, key):
         if DEBUG_2:
             print("\n\n** MAP IS BAD ** \n\n")
@@ -288,7 +283,6 @@ def p_zero_attack(ciphertext, space_char, key):
         key = recover_from_bad_key(cipher_words, key)
 
     return cipher_words, key
-
 
 
 
@@ -370,13 +364,15 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
 
 
     score = key_map_scoring_function(processed_cipherwords, key)
-    print(f"SCORE -> {score}")
+    if DEBUG:
+        print(f"SCORE -> {score}")
 
     if score < 40:
         for i in range(2):
-            if is_key_corrupted (key):
-                print(f"BAD KEY")
-                print_dict(key)
+            if DEBUG:
+                if is_key_corrupted (key):
+                    print(f"BAD KEY")
+                    print_dict(key)
 
             key =  recover_from_bad_key(processed_cipherwords, key)
             processed_cipherwords = remove_n_unknowns_from_cipherwords(processed_cipherwords, key, 3)
@@ -384,7 +380,8 @@ def higher_p_attack(ciphertext, space_char, key, p_hat):
             key = try_to_map_unkowns(processed_cipherwords, key)
 
             new_score = key_map_scoring_function(processed_cipherwords, key)
-            print(f"new_score round {i+1}-> after recover {new_score}")
+            if DEBUG:
+                print(f"new_score round {i+1}-> after recover {new_score}")
             if new_score >= 40:
                 break
 
@@ -920,10 +917,10 @@ def dict_2_attack_v2(ciphertext):
 
 
     # everything above is identical for all cases
-    if p_hat < 0.01:
+    if p_hat < 0.001:
         cipher_words, key = p_zero_attack(cleaned_ciphertext, space, key)
-        #final = space.join(cipher_words)
-        plaintext_guess = final_text_cleaning(cipher_words, space, key)
+        final = space.join(cipher_words)
+        plaintext_guess = partial_decrypt(final, key)
     else:
         cipher_words, key = higher_p_attack(cleaned_ciphertext, space, key, p_hat)
         plaintext_guess = final_text_cleaning(cipher_words, space, key)
@@ -956,12 +953,40 @@ def final_text_cleaning(ciphertext, space, key):
             else:
                 if i == len(ciphertext) - 1:
                     if UNKNOWN_CHAR in word:
-                        word.replace(UNKNOWN_CHAR, "")
+                        word = word.replace(UNKNOWN_CHAR, "")
                     plain_words_list.append(word)
 
+    current_len = len(make_plaintext(plain_words_list))
 
+    if DEBUG:
+        print(f"the len is {current_len}")
+    if current_len > 500:
+        duplicates = []
+        for i in range(1, len(plain_words_list)):
+            if plain_words_list[i] == plain_words_list [i-1]:
+                duplicates.append((plain_words_list[i], i))
 
+        while duplicates and current_len > 500:
+            word, idx = duplicates.pop()
+            current_len -= 1
+            current_len -= len(word)
+            del plain_words_list[idx]
 
+        last_word = plain_words_list[-1]
+        if current_len > 500 and current_len - len(last_word) < 500:
+            chars_to_remove = current_len - 500
+            last_word_length = len(last_word)
+
+            candidates = get_truncated_dict(last_word_length - chars_to_remove)
+            restricted_candidates = [word for word in candidates if word[-1] == last_word[-1]]
+
+            print(f"restricted candidates {restricted_candidates}")
+            for word in restricted_candidates:
+                lcs = find_similar_words.get_longest_common_subsequence(word, last_word)
+                print(f"lcs {lcs} word {word} last_word {last_word}")
+                if lcs == word:
+                    plain_words_list[-1] = word
+                    break
 
     return make_plaintext(plain_words_list)
 
@@ -972,6 +997,8 @@ def make_plaintext(plain_words_list):
     for i, word in enumerate(plain_words_list):
         if i > 0:
             plaintext += " "
+        if UNKNOWN_CHAR in word:
+            word.replace(UNKNOWN_CHAR, "")
         plaintext += word
 
     return plaintext
@@ -1162,10 +1189,11 @@ def test_dict_2_v2_attack(size, p=0, substring_match_error_limit = 470):
         if plaintext != generated_plaintext:
             #print(f"length lcs {len(lcs)}")
             errors.append(test_seed)
-            print(f"\n\nERROR CAUSED BY seed({test_seed})")
-            print(f"Generated plaintext len {len(generated_plaintext)}\n'{generated_plaintext}'\n")
-            print(f"ciphertext: \n'{ciphertext}'\n")
-            print(f"Guesed plaintext len {len(plaintext)}\n'{plaintext}'\n\n")
+            if True:
+                print(f"\n\nERROR CAUSED BY seed({test_seed})")
+                print(f"Generated plaintext len {len(generated_plaintext)}\n'{generated_plaintext}'\n")
+                print(f"ciphertext: \n'{ciphertext}'\n")
+                print(f"Guesed plaintext len {len(plaintext)}\n'{plaintext}'\n\n")
 
         test_seed += 1
 
@@ -1193,39 +1221,11 @@ def test_remove_candidates():
 
 def main():
     #test_remove_candidates()
-    #test_dict_2_v2_attack(100, p=.0)
+    test_dict_2_v2_attack(20, p=.15)
+    #meta_test(25, 26, 10, 500)
 
 
 
-    meta_test(0, 50, 3, 500)
-    #print(remove_stubs(["bb", "abcdef", "fh", "ijklmnop", "jlp", "qr","abc", "def", "abc", "def", "tuvxqd", "lsu"]))
-
-    #texta = "abchellodefg"
-    #textb = "hezlzzlzzzo"
-
-    #lcs = find_similar_words.get_longest_common_subsequence(texta, textb)
-
-    #print(f"lcs {lcs}")
-
-    '''
-    #print(preprocess_dictionary_2())
-
-
-    #plaintext = dictionary.make_random_dictionary_2_plaintext()
-    plaintext = "stuffer outflanked farcer blistered rotates gladding tortoni hyped particulate protectional rankness brickyard particulate invalided particulate imagist twirlier frizzlers favouring lingua pilfers stuffer unlikely imagist alefs baldpates clarence farcer imagist stuffer tortoni overachiever brickyard stuffer rotates outdates invalided freaking amulets protectional rankness moonset outdates glottic rotates amulets outdates amulets frizzlers smeltery baldpates glottic gladding alefs moonset protect"
-    print(f"\nplaintext {len(plaintext)} chars \n'{plaintext}'\n")
-
-    key = encrypt.generate_key_mapping()
-    #print(f"key: {key}")
-
-    ciphertext = encrypt.encrypt(plaintext, key, probability=0.00)
-    print(f"ciphertext: \n'{ciphertext}'\n")
-
-    plaintext = dict_2_attack_v2(ciphertext)
-    print(f"plaintext len{len(plaintext)}: \n'{plaintext}'")
-
-    print(f"Bad character present {plaintext.find(UNKNOWN_CHAR)}")
-    '''
 
 if __name__ == "__main__":
     main()
